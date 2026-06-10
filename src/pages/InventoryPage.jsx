@@ -3,7 +3,7 @@ import { B } from '../theme.js';
 import { PageHeader, KPICard, Card, SearchInput, FilterChips, DataTable, StatusBadge } from '../components/ui.jsx';
 import { INVENTORY } from '../mockData.js';
 
-export function InventoryPage() {
+export function InventoryPage({ showModal }) {
     const [search, setSearch] = useState("");
     const [schedFilter, setSchedFilter] = useState("All");
     const scheds = ["All", "OTC", "H", "H1", "X"];
@@ -13,7 +13,7 @@ export function InventoryPage() {
     );
     return (
         <div>
-            <PageHeader title="Inventory" subtitle="Batch-level stock · FEFO allocation · expiry tracking" action="Add stock / GRN" />
+            <PageHeader title="Inventory" subtitle="Batch-level stock · FEFO allocation · expiry tracking" action="Add stock / GRN" onAction={showModal} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 14 }}>
                 <KPICard icon="ti-package" label="Total SKUs" value="8,247" sub="in active stock" accent={B.navy} />
                 <KPICard icon="ti-alert-circle" label="Expiring < 30 days" value="4" sub="Immediate action" accent={B.red} subColor={B.red} />

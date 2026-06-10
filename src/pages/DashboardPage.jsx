@@ -4,10 +4,24 @@ import { BarChart, DonutChart } from '../components/charts.jsx';
 import { StatusBadge } from '../components/ui.jsx';
 import { ORDERS, WEEKLY_SALES, MONTHLY_SALES, MONTHS, DAYS, COMPANY_SALES } from '../mockData.js';
 
-export function DashboardPage({ setPage, showModal }) {
+export function DashboardPage({ setPage, showModal, currentUser }) {
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning";
+        if (hour < 17) return "Good afternoon";
+        return "Good evening";
+    };
+
+    const getDateString = () => {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date().toLocaleDateString('en-US', options);
+    };
+
+    const name = currentUser && currentUser.fullName ? currentUser.fullName.split(' ')[0] : 'Admin';
+
     return (
         <div>
-            <PageHeader title="Dashboard" subtitle="Tuesday, 9 June 2026 — Good morning, Admin" />
+            <PageHeader title="Dashboard" subtitle={`${getDateString()} — ${getGreeting()}, ${name}`} />
 
             <AlertBar type="warn">
                 <strong>3 compliance alerts:</strong> &nbsp;2 products expiring within 30 days · 1 retailer Drug License expiring in 18 days · GSTR-1 filing due in 5 days

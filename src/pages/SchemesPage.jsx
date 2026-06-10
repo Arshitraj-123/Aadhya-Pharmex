@@ -4,13 +4,13 @@ import { PageHeader, KPICard, Card, FilterChips, DataTable, StatusBadge } from '
 import { ProgressBar } from '../components/charts.jsx';
 import { SCHEMES } from '../mockData.js';
 
-export function SchemesPage() {
+export function SchemesPage({ showModal }) {
     const [filter, setFilter] = useState("All");
     const statuses = ["All", "Active", "Expiring", "Expired"];
     const filtered = filter === "All" ? SCHEMES : SCHEMES.filter(s => s.status === filter);
     return (
         <div>
-            <PageHeader title="Scheme management" subtitle="Company promotions · free goods · margin tracking" action="Add scheme" />
+            <PageHeader title="Scheme management" subtitle="Company promotions · free goods · margin tracking" action="Add scheme" onAction={showModal} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 14 }}>
                 <KPICard icon="ti-tag" label="Active schemes" value="5" sub="From 5 companies" accent={B.navy} />
                 <KPICard icon="ti-alert-circle" label="Expiring < 30 days" value="2" sub="Take action" accent={B.amber} subColor={B.amber} />

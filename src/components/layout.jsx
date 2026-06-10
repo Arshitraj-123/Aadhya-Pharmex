@@ -2,7 +2,7 @@ import { B } from '../theme.js';
 import { NAV_SECTIONS } from '../navConfig.js';
 import { NOTIFICATIONS } from '../mockData.js';
 
-export function Sidebar({ active, setActive, collapsed, setCollapsed, sidebarOpen }) {
+export function Sidebar({ active, setActive, collapsed, setCollapsed, sidebarOpen, onLogout }) {
     return (
         <div className={`sidebar-container ${sidebarOpen ? "open" : ""}`} style={{ width: collapsed ? 58 : 220, minHeight: "100vh", background: B.navy, flexShrink: 0, display: "flex", flexDirection: "column", zIndex: 1000 }}>
             {/* Logo */}
@@ -35,14 +35,16 @@ export function Sidebar({ active, setActive, collapsed, setCollapsed, sidebarOpe
             </nav>
 
             {/* Collapse toggle */}
-            <button onClick={() => setCollapsed(!collapsed)} style={{ margin: "8px 6px", padding: 9, border: "1px solid rgba(255,255,255,.1)", borderRadius: 8, background: "transparent", color: "rgba(255,255,255,.4)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit" }} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
-                <i className={`ti ${collapsed ? "ti-layout-sidebar-right" : "ti-layout-sidebar"}`} style={{ fontSize: 17 }} aria-hidden="true" />
-            </button>
+            <div style={{ display: 'flex', gap: 6, margin: "8px 6px" }}>
+                <button onClick={() => setCollapsed(!collapsed)} style={{ width: "100%", padding: 9, border: "1px solid rgba(255,255,255,.1)", borderRadius: 8, background: "transparent", color: "rgba(255,255,255,.4)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit", flexShrink: 0 }} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+                    <i className={`ti ${collapsed ? "ti-layout-sidebar-right" : "ti-layout-sidebar"}`} style={{ fontSize: 17 }} aria-hidden="true" />
+                </button>
+            </div>
         </div>
     );
 }
 
-export function Header({ page, onBell, showBell, onMenu }) {
+export function Header({ page, onBell, showBell, onMenu, currentUser, onProfileClick }) {
     const unread = NOTIFICATIONS.filter(n => !n.read).length;
     return (
         <div style={{ height: 54, background: B.white, borderBottom: `1px solid ${B.border}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", gap: 12, flexShrink: 0, position: "relative", zIndex: 100 }}>
@@ -63,13 +65,15 @@ export function Header({ page, onBell, showBell, onMenu }) {
                     {unread > 0 && <span style={{ position: "absolute", top: -2, right: -2, width: 7, height: 7, borderRadius: "50%", background: B.red }} />}
                 </button>
                 <div style={{ width: 1, height: 22, background: B.border }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div onClick={onProfileClick} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
                     <div style={{ width: 30, height: 30, borderRadius: "50%", background: B.navy, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ color: B.white, fontSize: 11, fontWeight: 500 }}>AD</span>
+                        <span style={{ color: B.white, fontSize: 11, fontWeight: 500 }}>
+                            {currentUser && currentUser.fullName ? currentUser.fullName.substring(0, 2).toUpperCase() : 'AD'}
+                        </span>
                     </div>
                     <div>
-                        <div style={{ fontSize: 12, fontWeight: 500, color: B.textPrimary }}>Admin</div>
-                        <div style={{ fontSize: 10, color: B.textMuted }}>Operations Manager</div>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: B.textPrimary }}>{currentUser && currentUser.fullName ? currentUser.fullName : 'Admin'}</div>
+                        <div style={{ fontSize: 10, color: B.textMuted }}>{currentUser && currentUser.role ? currentUser.role : 'Operations Manager'}</div>
                     </div>
                     <i className="ti ti-chevron-down" style={{ fontSize: 13, color: B.textMuted }} aria-hidden="true" />
                 </div>

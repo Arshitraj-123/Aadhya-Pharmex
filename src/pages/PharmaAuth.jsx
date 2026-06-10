@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from '../api/axios';
 import { 
   Activity, FlaskConical, ShieldCheck, ChevronRight, Microscope, TrendingUp, Users, Link as LinkIcon, 
   Eye, EyeOff, Building, Building2, Server, ArrowLeft, Mail, Smartphone, AlertTriangle, 
@@ -169,9 +170,9 @@ function LeftPanel({ viewMode }) {
           {viewMode === 'forgot-verify' && (
             <motion.div key="forgot-verify" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }}>
               <h1 className="mb-4 text-5xl font-bold leading-tight">Check your <br /> inbox</h1>
-              <p className="mb-12 text-lg text-slate-300">A 6-digit verification code has been sent to your registered contact.</p>
+              <p className="mb-12 text-lg text-slate-300">A 4-digit verification code has been sent to your registered contact.</p>
               <div className="grid grid-cols-2 gap-4">
-                 <div className="rounded-xl bg-white/10 p-5 border border-white/20"><div className="font-bold text-xl mb-1">6</div><div className="text-sm text-slate-400">Digit code</div></div>
+                 <div className="rounded-xl bg-white/10 p-5 border border-white/20"><div className="font-bold text-xl mb-1">4</div><div className="text-sm text-slate-400">Digit code</div></div>
                  <div className="rounded-xl bg-white/10 p-5 border border-white/20"><div className="font-bold text-xl mb-1">2 min</div><div className="text-sm text-slate-400">Validity</div></div>
               </div>
               <div className="mt-4 rounded-xl bg-white/10 p-4 border border-white/20 flex items-center gap-4">
@@ -262,6 +263,7 @@ function LoginRegisterForms({ viewMode, setViewMode, onLogin }) {
   const [authStep, setAuthStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '', otp: ['', '', '', ''] });
   const [regForm, setRegForm] = useState({ fullName: '', email: '', password: '', empId: '', role: '', branch: '', license: '' });
@@ -269,14 +271,32 @@ function LoginRegisterForms({ viewMode, setViewMode, onLogin }) {
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!loginForm.email) newErrors.email = "Email is required";
     else if (!validateEmail(loginForm.email)) newErrors.email = "Invalid email format";
     if (!loginForm.password) newErrors.password = "Password is required";
     setErrors(newErrors);
-    if (Object.keys(newErrors).length === 0) { setAuthStep(2); setErrors({}); }
+
+    if (Object.keys(newErrors).length === 0) {
+      try {
+        setLoading(true);
+        const res = await api.post('/auth/login', { email: loginForm.email, password: loginForm.password });
+        
+        // Log OTP to console for easy testing!
+        console.log('--- TEST 2FA OTP GENERATED ---');
+        console.log('OTP:', res.data.otp);
+        console.log('------------------------------');
+
+        setAuthStep(2); 
+        setErrors({});
+      } catch (err) {
+        setErrors({ email: err.response?.data?.message || 'Login failed' });
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handleOtpChange = (index, value) => {
@@ -291,13 +311,26 @@ function LoginRegisterForms({ viewMode, setViewMode, onLogin }) {
     if (e.key === 'Backspace' && !loginForm.otp[index] && index > 0) otpRefs[index - 1].current?.focus();
   };
 
-  const handleOtpSubmit = (e) => {
+  const handleOtpSubmit = async (e) => {
     e.preventDefault();
-    if (loginForm.otp.join('').length === 4) { if (onLogin) onLogin(); } 
-    else { setErrors({ otp: "Please enter the 4-digit OTP" }); }
+    if (loginForm.otp.join('').length === 4) { 
+      try {
+        setLoading(true);
+        const res = await api.post('/auth/login-verify', { email: loginForm.email, otp: loginForm.otp.join('') });
+        localStorage.setItem('auth_token', res.data.token);
+        localStorage.setItem('auth_user', JSON.stringify(res.data.user));
+        if (onLogin) onLogin(res.data.user);
+      } catch (err) {
+        setErrors({ otp: err.response?.data?.message || 'Invalid OTP' });
+      } finally {
+        setLoading(false);
+      }
+    } else { 
+      setErrors({ otp: "Please enter the 4-digit OTP" }); 
+    }
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!regForm.fullName) newErrors.fullName = "Required";
@@ -309,9 +342,17 @@ function LoginRegisterForms({ viewMode, setViewMode, onLogin }) {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      alert("Registration submitted for admin approval.");
-      setViewMode('login');
-      setAuthStep(1);
+      try {
+        setLoading(true);
+        await api.post('/auth/register', regForm);
+        alert("Registration successful! Awaiting admin approval.");
+        setViewMode('login');
+        setAuthStep(1);
+      } catch (err) {
+        setErrors({ email: err.response?.data?.message || 'Registration failed' });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -355,7 +396,7 @@ function LoginRegisterForms({ viewMode, setViewMode, onLogin }) {
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showPassword ? <EyeOff size={16} /> : <Eye size={16} />}</button>
                 </div>
               </div>
-              <button className="mt-4 w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white">Submit Registration</button>
+              <button disabled={loading} className="mt-4 w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? 'Submitting...' : 'Submit Registration'}</button>
             </form>
           </motion.div>
         ) : authStep === 1 ? (
@@ -380,7 +421,7 @@ function LoginRegisterForms({ viewMode, setViewMode, onLogin }) {
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                 </div>
               </div>
-              <button className="mt-6 w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white">Continue</button>
+              <button disabled={loading} className="mt-6 w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? 'Signing in...' : 'Continue'}</button>
             </form>
           </motion.div>
         ) : (
@@ -397,7 +438,7 @@ function LoginRegisterForms({ viewMode, setViewMode, onLogin }) {
                 ))}
               </div>
               {errors.otp && <p className="text-center text-sm text-red-500">{errors.otp}</p>}
-              <button className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white">Verify & Login</button>
+              <button disabled={loading} className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white disabled:opacity-70">{loading ? 'Verifying...' : 'Verify & Login'}</button>
               <button type="button" onClick={() => setAuthStep(1)} className="w-full text-center text-sm text-slate-500">Back to password</button>
             </form>
           </motion.div>
@@ -514,14 +555,17 @@ function SSOForms({ viewMode, setViewMode, onLogin }) {
 }
 
 function ForgotPasswordForms({ viewMode, setViewMode, resetEmail, setResetEmail }) {
-  const [otp, setOtp] = useState(['','','','','','']);
-  const otpRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
+  const [otp, setOtp] = useState(['','','','']);
+  const otpRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
   const [timeLeft, setTimeLeft] = useState(120);
   
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
   const [showP1, setShowP1] = useState(false);
   const [showP2, setShowP2] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (viewMode === 'forgot-verify' && timeLeft > 0) {
@@ -533,7 +577,7 @@ function ForgotPasswordForms({ viewMode, setViewMode, resetEmail, setResetEmail 
   const handleOtpChange = (index, value) => {
     if (value.length > 1) value = value.slice(-1);
     const newOtp = [...otp]; newOtp[index] = value; setOtp(newOtp);
-    if (value && index < 5) otpRefs[index + 1].current?.focus();
+    if (value && index < 3) otpRefs[index + 1].current?.focus();
   };
   const handleOtpKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) otpRefs[index - 1].current?.focus();
@@ -562,7 +606,7 @@ function ForgotPasswordForms({ viewMode, setViewMode, resetEmail, setResetEmail 
   return (
     <motion.div layout className="w-full max-w-md rounded-2xl bg-white p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
       {viewMode !== 'forgot-success' && (
-        <button onClick={() => setViewMode(viewMode === 'forgot-request' ? 'login' : viewMode === 'forgot-verify' ? 'forgot-request' : 'forgot-verify')} className="mb-6 flex items-center text-sm font-medium text-slate-500 hover:text-slate-800"><ArrowLeft className="mr-1 h-4 w-4" /> Back</button>
+        <button onClick={() => { setError(''); setViewMode(viewMode === 'forgot-request' ? 'login' : viewMode === 'forgot-verify' ? 'forgot-request' : 'forgot-verify'); }} className="mb-6 flex items-center text-sm font-medium text-slate-500 hover:text-slate-800"><ArrowLeft className="mr-1 h-4 w-4" /> Back</button>
       )}
 
       {viewMode === 'forgot-request' && (
@@ -596,7 +640,30 @@ function ForgotPasswordForms({ viewMode, setViewMode, resetEmail, setResetEmail 
               <div>If you don't receive the OTP within 2 minutes, contact your system administrator at admin@adhyapharma.in</div>
             </div>
 
-            <button onClick={() => { if(resetEmail) { setViewMode('forgot-verify'); setTimeLeft(120); } }} className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white mt-4">Send OTP</button>
+            <button onClick={async () => { 
+              if(resetEmail) { 
+                try {
+                  setLoading(true);
+                  setError('');
+                  const res = await api.post('/auth/forgot-password', { email: resetEmail, type: 'email' });
+                  
+                  // For easy testing: log the OTP directly to the browser console!
+                  console.log('--- TEST OTP GENERATED ---');
+                  console.log('OTP:', res.data.otp);
+                  console.log('--------------------------');
+
+                  setViewMode('forgot-verify'); 
+                  setTimeLeft(120); 
+                } catch(err) {
+                  setError(err.response?.data?.message || 'Failed to send OTP');
+                } finally {
+                  setLoading(false);
+                }
+              } 
+            }} disabled={loading || !resetEmail} className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white mt-4 disabled:opacity-70">
+              {loading ? 'Sending...' : 'Send OTP'}
+            </button>
+            {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
           </div>
         </motion.div>
       )}
@@ -606,7 +673,7 @@ function ForgotPasswordForms({ viewMode, setViewMode, resetEmail, setResetEmail 
           <div className="mb-6 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-600 shadow-sm"><Mail className="h-7 w-7" /></div>
             <h2 className="text-2xl font-bold text-slate-900">Enter verification code</h2>
-            <p className="mt-2 text-sm text-slate-500">We sent a 6-digit OTP to <br/><span className="font-semibold text-slate-800">{resetEmail ? resetEmail.replace(/(.{1}).*(@.*)/, "$1***$2") : "r***h@adhyapharma.in"}</span></p>
+            <p className="mt-2 text-sm text-slate-500">We sent a 4-digit OTP to <br/><span className="font-semibold text-slate-800">{resetEmail ? resetEmail.replace(/(.{1}).*(@.*)/, "$1***$2") : "r***h@adhyapharma.in"}</span></p>
           </div>
           {renderProgress(2)}
 
@@ -620,7 +687,22 @@ function ForgotPasswordForms({ viewMode, setViewMode, resetEmail, setResetEmail 
              Resend OTP in <span className="text-blue-600 font-bold">{Math.floor(timeLeft/60).toString().padStart(2,'0')}:{(timeLeft%60).toString().padStart(2,'0')}</span>
           </div>
 
-          <button onClick={() => setViewMode('forgot-reset')} className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white">Verify OTP</button>
+          <button onClick={async () => {
+             try {
+               setLoading(true);
+               setError('');
+               await api.post('/auth/verify-otp', { email: resetEmail, otp: otp.join('') });
+               setViewMode('forgot-reset');
+             } catch(err) {
+               setError(err.response?.data?.message || 'Invalid OTP');
+             } finally {
+               setLoading(false);
+             }
+          }} disabled={loading || otp.join('').length < 4} className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white disabled:opacity-70">
+            {loading ? 'Verifying...' : 'Verify OTP'}
+          </button>
+          {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
+          
           <div className="mt-4 text-center text-sm text-slate-500">Didn't receive it? <button className="font-semibold text-slate-800 hover:underline">Resend OTP</button></div>
         </motion.div>
       )}
@@ -658,7 +740,21 @@ function ForgotPasswordForms({ viewMode, setViewMode, resetEmail, setResetEmail 
               After resetting, you will be asked to set up 2-Factor Authentication (2FA) if not already configured.
             </div>
 
-            <button onClick={() => setViewMode('forgot-success')} disabled={strength < 3 || newPass !== confirmPass} className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white disabled:opacity-50 transition-opacity">Reset password</button>
+            <button onClick={async () => {
+              try {
+                setLoading(true);
+                setError('');
+                await api.post('/auth/reset-password', { email: resetEmail, newPassword: newPass });
+                setViewMode('forgot-success');
+              } catch(err) {
+                setError(err.response?.data?.message || 'Reset failed');
+              } finally {
+                setLoading(false);
+              }
+            }} disabled={strength < 3 || newPass !== confirmPass || loading} className="w-full rounded-lg bg-slate-900 py-3 text-sm font-semibold text-white disabled:opacity-50 transition-opacity">
+              {loading ? 'Resetting...' : 'Reset password'}
+            </button>
+            {error && <p className="text-red-500 text-sm text-center mt-2">{error}</p>}
           </div>
         </motion.div>
       )}

@@ -3,14 +3,14 @@ import { B } from '../theme.js';
 import { PageHeader, KPICard, Card, SearchInput, DataTable, StatusBadge } from '../components/ui.jsx';
 import { RETAILERS } from '../mockData.js';
 
-export function RetailersPage() {
+export function RetailersPage({ showModal }) {
     const [search, setSearch] = useState("");
     const filtered = RETAILERS.filter(r =>
         r.name.toLowerCase().includes(search.toLowerCase()) || r.city.toLowerCase().includes(search.toLowerCase())
     );
     return (
         <div>
-            <PageHeader title="Retailer management" subtitle="KYC · credit limits · Drug License tracking · 400+ partners" action="Add retailer" />
+            <PageHeader title="Retailer management" subtitle="KYC · credit limits · Drug License tracking · 400+ partners" action="Add retailer" onAction={showModal} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 14 }}>
                 <KPICard icon="ti-building-store" label="Active retailers" value="412" sub="14 districts" accent={B.navy} />
                 <KPICard icon="ti-currency-rupee" label="Total outstanding" value="₹18.4L" sub="All accounts" accent={B.red} subColor={B.red} />

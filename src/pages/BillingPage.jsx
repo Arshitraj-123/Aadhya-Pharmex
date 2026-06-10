@@ -1,7 +1,7 @@
 import { B } from '../theme.js';
 import { PageHeader, AlertBar, KPICard, Card, CardTitle, DataTable, StatusBadge } from '../components/ui.jsx';
 
-export function BillingPage() {
+export function BillingPage({ showModal }) {
     const invoices = [
         { inv: "INV/26-27/0284", retailer: "Shree Medicals", date: "09 Jun", taxable: "₹4,591", gst: "₹229", total: "₹4,820", irn: "Generated" },
         { inv: "INV/26-27/0283", retailer: "Apollo Pharma Retail", date: "09 Jun", taxable: "₹1,276", gst: "₹64", total: "₹1,340", irn: "Generated" },
@@ -12,7 +12,7 @@ export function BillingPage() {
     ];
     return (
         <div>
-            <PageHeader title="Billing & GST" subtitle="e-Invoice (IRP) · GSTR-1 · GSTR-3B · credit notes" action="Generate invoice" />
+            <PageHeader title="Billing & GST" subtitle="e-Invoice (IRP) · GSTR-1 · GSTR-3B · credit notes" action="Generate invoice" onAction={showModal} />
             <AlertBar type="warn"><strong>GSTR-1 due in 5 days (14 Jun 2026).</strong> &nbsp;7 invoices pending IRP submission. <span style={{ textDecoration: "underline", cursor: "pointer" }}>Submit now →</span></AlertBar>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 14 }}>
                 <KPICard icon="ti-file-invoice" label="Invoices this month" value="284" sub="₹12.8L total value" accent={B.navy} />

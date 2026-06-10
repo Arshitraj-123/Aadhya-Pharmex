@@ -3,13 +3,13 @@ import { B } from '../theme.js';
 import { PageHeader, KPICard, Card, FilterChips, DataTable, StatusBadge } from '../components/ui.jsx';
 import { PURCHASES } from '../mockData.js';
 
-export function PurchasePage() {
+export function PurchasePage({ showModal }) {
     const [filter, setFilter] = useState("All");
     const statuses = ["All", "Pending", "In Transit", "GRN Done"];
     const filtered = filter === "All" ? PURCHASES : PURCHASES.filter(p => p.status === filter);
     return (
         <div>
-            <PageHeader title="Purchase / GRN" subtitle="Supplier orders · goods receipt · ITC register" action="New purchase order" />
+            <PageHeader title="Purchase / GRN" subtitle="Supplier orders · goods receipt · ITC register" action="New purchase order" onAction={showModal} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 14 }}>
                 <KPICard icon="ti-clipboard-list" label="Open POs" value="3" sub="₹1.63L pending GRN" accent={B.amber} subColor={B.amber} />
                 <KPICard icon="ti-currency-rupee" label="Payable this month" value="₹2.49L" sub="To 4 suppliers" accent={B.navy} />

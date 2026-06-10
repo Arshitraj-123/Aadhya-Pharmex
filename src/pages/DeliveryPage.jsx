@@ -2,10 +2,10 @@ import { B } from '../theme.js';
 import { PageHeader, KPICard, Card, CardTitle, DataTable, StatusBadge } from '../components/ui.jsx';
 import { DELIVERIES } from '../mockData.js';
 
-export function DeliveryPage() {
+export function DeliveryPage({ showModal }) {
     return (
         <div>
-            <PageHeader title="Delivery management" subtitle="Route tracking · proof of delivery · collection" action="New dispatch" />
+            <PageHeader title="Delivery management" subtitle="Route tracking · proof of delivery · collection" action="New dispatch" onAction={showModal} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 10, marginBottom: 14 }}>
                 <KPICard icon="ti-truck-delivery" label="Active deliveries" value="3" sub="2 routes in progress" accent={B.navyMid} />
                 <KPICard icon="ti-check" label="Completed today" value="2" sub="21 orders delivered" accent={B.green} subColor={B.green} />

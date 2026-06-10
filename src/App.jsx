@@ -3,7 +3,7 @@ import { B } from "./theme.js";
 
 import { Sidebar, Header } from "./components/layout.jsx";
 import { PageHeader, EmptyState } from "./components/ui.jsx";
-import { NewOrderModal, NotifPanel } from "./components/modals.jsx";
+import { NewOrderModal, NewStockModal, NewDispatchModal, NewRetailerModal, NewPurchaseModal, NewSchemeModal, NewInvoiceModal, ProfileModal, NotifPanel } from "./components/modals.jsx";
 
 import { DashboardPage } from "./pages/DashboardPage.jsx";
 import { OrdersPage } from "./pages/OrdersPage.jsx";
@@ -22,26 +22,50 @@ export default function App() {
     const [page, setPage] = useState("dashboard");
     const [collapsed, setCollapsed] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [showStockModal, setShowStockModal] = useState(false);
+    const [showDispatchModal, setShowDispatchModal] = useState(false);
+    const [showRetailerModal, setShowRetailerModal] = useState(false);
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+    const [showSchemeModal, setShowSchemeModal] = useState(false);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
     const [showNotif, setShowNotif] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('auth_token'));
+    const [currentUser, setCurrentUser] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('auth_user')) || null; }
+        catch(e) { return null; }
+    });
+
+    const handleLogin = (user) => {
+        setIsAuthenticated(true);
+        if (user) setCurrentUser(user);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        setPage('dashboard');
+    };
 
     const PAGES = {
-        dashboard: <DashboardPage setPage={setPage} showModal={() => setShowModal(true)} />,
+        dashboard: <DashboardPage setPage={setPage} showModal={() => setShowModal(true)} currentUser={currentUser} />,
         orders: <OrdersPage showModal={() => setShowModal(true)} />,
-        inventory: <InventoryPage />,
-        delivery: <DeliveryPage />,
-        retailers: <RetailersPage />,
-        purchase: <PurchasePage />,
-        schemes: <SchemesPage />,
-        billing: <BillingPage />,
+        inventory: <InventoryPage showModal={() => setShowStockModal(true)} />,
+        delivery: <DeliveryPage showModal={() => setShowDispatchModal(true)} />,
+        retailers: <RetailersPage showModal={() => setShowRetailerModal(true)} />,
+        purchase: <PurchasePage showModal={() => setShowPurchaseModal(true)} />,
+        schemes: <SchemesPage showModal={() => setShowSchemeModal(true)} />,
+        billing: <BillingPage showModal={() => setShowInvoiceModal(true)} />,
         compliance: <CompliancePage />,
         reports: <ReportsPage />,
         settings: <SettingsPage />,
     };
 
     if (!isAuthenticated) {
-        return <PharmaAuth onLogin={() => setIsAuthenticated(true)} />;
+        return <PharmaAuth onLogin={handleLogin} />;
     }
 
     return (
@@ -50,7 +74,13 @@ export default function App() {
             <div className={`mobile-backdrop ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
 
             <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-                <Header page={page} onBell={() => setShowNotif(!showNotif)} showBell={showNotif} onMenu={() => setSidebarOpen(true)} />
+                <Header 
+                    page={page} 
+                    onBell={() => setShowNotif(true)} 
+                    onMenu={() => setSidebarOpen(true)}
+                    onProfileClick={() => setShowProfileModal(true)}
+                    currentUser={currentUser} 
+                />
                 {showNotif && <NotifPanel onClose={() => setShowNotif(false)} />}
 
                 <main className="main-content" style={{ flex: 1, overflowY: "auto", padding: "18px 20px" }} onClick={() => setShowNotif(false)}>
@@ -64,6 +94,13 @@ export default function App() {
             </div>
 
             {showModal && <NewOrderModal onClose={() => setShowModal(false)} />}
+            {showStockModal && <NewStockModal onClose={() => setShowStockModal(false)} />}
+            {showDispatchModal && <NewDispatchModal onClose={() => setShowDispatchModal(false)} />}
+            {showRetailerModal && <NewRetailerModal onClose={() => setShowRetailerModal(false)} />}
+            {showPurchaseModal && <NewPurchaseModal onClose={() => setShowPurchaseModal(false)} />}
+            {showSchemeModal && <NewSchemeModal onClose={() => setShowSchemeModal(false)} />}
+            {showInvoiceModal && <NewInvoiceModal onClose={() => setShowInvoiceModal(false)} />}
+            {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} onLogout={handleLogout} currentUser={currentUser} />}
         </div>
     );
 }
