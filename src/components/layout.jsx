@@ -10,7 +10,7 @@ export function Sidebar({ active, setActive, collapsed, setCollapsed, sidebarOpe
                 <div style={{ width: 30, height: 30, borderRadius: 8, background: B.green, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <i className="ti ti-pill" style={{ fontSize: 16, color: B.white }} aria-hidden="true" />
                 </div>
-                {!collapsed && <div><div style={{ color: B.white, fontWeight: 500, fontSize: 12, lineHeight: 1.2 }}>Aadhya Pharmex</div><div style={{ color: "rgba(255,255,255,.45)", fontSize: 10, marginTop: 1 }}>Distribution DMS v1.1</div></div>}
+                {!collapsed && <div><div style={{ color: B.white, fontWeight: 500, fontSize: 12, lineHeight: 1.2 }}>Adhya Pharmex</div></div>}
             </div>
 
             {/* Nav */}

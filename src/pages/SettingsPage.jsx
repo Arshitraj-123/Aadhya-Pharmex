@@ -29,7 +29,7 @@ export function SettingsPage() {
             <Card>
                 {activeTab === "company" && (
                     <div className="grid-responsive grid-2-col" style={{ marginBottom: 0 }}>
-                        {[["Company name", "Aadhya Pharmex Pvt. Ltd."], ["GSTIN", "22AABCA1234Z1Z5"], ["Drug License no.", "BR/DL/DIST/2022/00001"], ["Drug License expiry", "31 Dec 2027"], ["PAN", "AABCA1234Z"], ["State", "Bihar"], ["Head office", "Patna, Bihar — 800001"], ["Phone", "+91 98765 43210"]].map(([l, v], i) => (
+                        {[["Company name", "Adhya Pharmex Pvt. Ltd."], ["GSTIN", "22AABCA1234Z1Z5"], ["Drug License no.", "BR/DL/DIST/2022/00001"], ["Drug License expiry", "31 Dec 2027"], ["PAN", "AABCA1234Z"], ["State", "Bihar"], ["Head office", "Patna, Bihar — 800001"], ["Phone", "+91 98765 43210"]].map(([l, v], i) => (
                             <div key={i}>
                                 <label style={{ fontSize: 11, fontWeight: 500, color: B.textSecondary, display: "block", marginBottom: 4 }}>{l}</label>
                                 <input defaultValue={v} style={{ width: "100%", height: 34, border: `1px solid ${B.border}`, borderRadius: 8, fontSize: 12, padding: "0 10px", background: B.surface, color: B.textPrimary, fontFamily: "inherit", boxSizing: "border-box" }} />
@@ -51,11 +51,11 @@ export function SettingsPage() {
                         <DataTable
                             headers={["Name", "Email", "Role", "Branch", "Status", "Actions"]}
                             rows={[
-                                ["Rajesh Kumar", "rajesh@aadhyapharma.in", "Operations Manager", "Head Office", "Active"],
-                                ["Priya Sharma", "priya@aadhyapharma.in", "Accounts Executive", "Head Office", "Active"],
-                                ["Sunil Yadav", "sunil@aadhyapharma.in", "Warehouse Incharge", "Head Office", "Active"],
-                                ["Rajan Kumar", "rajan@aadhyapharma.in", "Delivery Staff", "Head Office", "Active"],
-                                ["Amit Singh", "amit@aadhyapharma.in", "Delivery Staff", "Muzaffarpur", "Active"],
+                                ["Rajesh Kumar", "rajesh@adhyapharma.in", "Operations Manager", "Head Office", "Active"],
+                                ["Priya Sharma", "priya@adhyapharma.in", "Accounts Executive", "Head Office", "Active"],
+                                ["Sunil Yadav", "sunil@adhyapharma.in", "Warehouse Incharge", "Head Office", "Active"],
+                                ["Rajan Kumar", "rajan@adhyapharma.in", "Delivery Staff", "Head Office", "Active"],
+                                ["Amit Singh", "amit@adhyapharma.in", "Delivery Staff", "Muzaffarpur", "Active"],
                             ].map(([name, email, role, branch, st], i) => (
                                 <tr key={i} style={{ borderBottom: `1px solid ${B.border}`, background: i % 2 === 0 ? B.white : B.surface }}>
                                     <td style={{ padding: "9px 10px", fontWeight: 500 }}>{name}</td>
