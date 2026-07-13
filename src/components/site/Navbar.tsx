@@ -56,7 +56,7 @@ export function Navbar() {
             <BrandLogo className="w-7 h-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]" />
           </div>
           <div className="leading-tight whitespace-nowrap">
-            <div className={cn("font-bold text-base sm:text-lg transition-smooth", scrolled ? "text-foreground" : "text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]")}>Adhya Pharmex</div>
+            <div className={cn("font-bold text-base sm:text-lg transition-smooth", scrolled ? "text-foreground" : "text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)]")}>Aadya Pharmex</div>
             <div className={cn("text-[10px] tracking-[0.2em] uppercase transition-smooth", scrolled ? "text-muted-foreground" : "text-white/80")}>Healthcare</div>
           </div>
         </Link>

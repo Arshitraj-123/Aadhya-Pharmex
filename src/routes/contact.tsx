@@ -37,9 +37,9 @@ function ContactPage() {
         <div className="container mx-auto px-4 grid lg:grid-cols-[1fr_1.4fr] gap-10 max-w-6xl">
           <div className="space-y-4">
             {[
-              { icon: MapPin, t: "Headquarters", d: "14 Pharma Street, Industrial Area\nMumbai, Maharashtra 400001" },
+              { icon: MapPin, t: "Headquarters", d: "14 Pharma Street, Industrial Area\nNoida, Uttar Prdesh 201301" },
               { icon: Phone, t: "Phone", d: "+91 99999 99999\n+91 88888 88888" },
-              { icon: Mail, t: "Email", d: "hello@medonix.com\nsales@medonix.com" },
+              { icon: Mail, t: "Email", d: "hello@aadya.com" },
               { icon: Clock, t: "Working Hours", d: "Mon – Sat: 9:00 AM – 7:00 PM\nSunday: Closed" },
             ].map((c, i) => (
               <motion.div key={c.t} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}

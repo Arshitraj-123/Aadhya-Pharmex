@@ -13,7 +13,7 @@ export function Footer() {
                 <Pill className="w-5 h-5"/>
               </div>
               <div>
-                <div className="font-bold text-lg">Adhya Pharmex</div>
+                <div className="font-bold text-lg">Aadya Pharmex</div>
                 <div className="text-[10px] tracking-[0.2em] opacity-70 uppercase">Healthcare</div>
               </div>
             </div>
@@ -53,12 +53,12 @@ export function Footer() {
             <ul className="space-y-3 text-sm opacity-80">
               <li className="flex items-start gap-2"><MapPin className="w-4 h-4 mt-0.5 shrink-0" /><span>14 Pharma Street, Industrial Area, Noida 201301</span></li>
               <li className="flex items-center gap-2"><Phone className="w-4 h-4 shrink-0" /><span>+91 99999 99999</span></li>
-              <li className="flex items-center gap-2"><Mail className="w-4 h-4 shrink-0" /><span>hello@medonix.com</span></li>
+              <li className="flex items-center gap-2"><Mail className="w-4 h-4 shrink-0" /><span>hello@aadya.com</span></li>
             </ul>
           </div>
         </div>
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-3 text-xs opacity-70">
-          <p>© {new Date().getFullYear()} Adhya Pharmex Healthcare. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Aadya Pharmex Healthcare. All rights reserved.</p>
           <p>GMP & WHO-GMP Certified · ISO 9001:2015</p>
         </div>
       </div>

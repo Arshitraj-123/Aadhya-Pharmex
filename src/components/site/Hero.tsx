@@ -102,7 +102,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mt-6 text-lg text-white/85 max-w-xl leading-relaxed"
           >
-            Adhya Pharmex Healthcare delivers premium medicines from 50+ trusted brands — blending Ayurvedic wisdom with modern pharmacology, shipped to 400+ retailers nationwide.
+            Aadya Pharmex Healthcare delivers premium medicines from 50+ trusted brands — blending Ayurvedic wisdom with modern pharmacology, shipped to 400+ retailers nationwide.
           </motion.p>
 
           {/* BUTTONS */}
@@ -203,7 +203,7 @@ export function Hero() {
 
               <img
                 src={productImg}
-                alt="Adhya Pharmex premium herbal medicine"
+                alt="Aadya Pharmex premium herbal medicine"
                 width={1024}
                 height={1024}
                 className="w-full h-auto drop-shadow-2xl"
@@ -212,7 +212,7 @@ export function Hero() {
               <div className="mt-4 text-center">
 
                 <div className="text-xs uppercase tracking-[0.3em] text-yellow-100 font-bold">
-                  Adhya Pharmex Pharma
+                  Aadya Pharmex Pharma
                 </div>
 
                 <div className="text-white text-xl font-bold mt-1">
