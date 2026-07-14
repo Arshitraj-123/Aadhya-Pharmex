@@ -7,6 +7,8 @@ import vitamins from "@/assets/product-vitamins.jpg";
 import drops from "@/assets/product-drops.jpg";
 import inhaler from "@/assets/product-inhaler.jpg";
 import hajmola from "@/assets/hajmola-candy.jpg";
+import { productImageMap } from "./productImages";
+
 
 
 export type Product = {
@@ -556,7 +558,7 @@ export const products: Product[] = (() => {
         name,
         brand: brands[(id + i) % brands.length],
         category: cat.slug,
-        image: imgMap[cat.slug] || tablet,
+        image: productImageMap[name] || imgMap[cat.slug] || tablet,
         mrp,
         price,
         packing:

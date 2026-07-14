@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as ProductsRouteImport } from './routes/products'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as BlogRouteImport } from './routes/blog'
@@ -26,6 +28,11 @@ import { Route as AboutCertificationsRouteImport } from './routes/about.certific
 import { Route as AboutCeoRouteImport } from './routes/about.ceo'
 import { Route as AboutBrandsRouteImport } from './routes/about.brands'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
@@ -34,6 +41,11 @@ const ServicesRoute = ServicesRouteImport.update({
 const ProductsRoute = ProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -113,8 +125,10 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
+  '/login': typeof LoginRoute
   '/products': typeof ProductsRouteWithChildren
   '/services': typeof ServicesRoute
+  '/signup': typeof SignupRoute
   '/about/brands': typeof AboutBrandsRoute
   '/about/ceo': typeof AboutCeoRoute
   '/about/certifications': typeof AboutCertificationsRoute
@@ -131,8 +145,10 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
+  '/login': typeof LoginRoute
   '/products': typeof ProductsRouteWithChildren
   '/services': typeof ServicesRoute
+  '/signup': typeof SignupRoute
   '/about/brands': typeof AboutBrandsRoute
   '/about/ceo': typeof AboutCeoRoute
   '/about/certifications': typeof AboutCertificationsRoute
@@ -150,8 +166,10 @@ export interface FileRoutesById {
   '/blog': typeof BlogRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
+  '/login': typeof LoginRoute
   '/products': typeof ProductsRouteWithChildren
   '/services': typeof ServicesRoute
+  '/signup': typeof SignupRoute
   '/about/brands': typeof AboutBrandsRoute
   '/about/ceo': typeof AboutCeoRoute
   '/about/certifications': typeof AboutCertificationsRoute
@@ -170,8 +188,10 @@ export interface FileRouteTypes {
     | '/blog'
     | '/contact'
     | '/gallery'
+    | '/login'
     | '/products'
     | '/services'
+    | '/signup'
     | '/about/brands'
     | '/about/ceo'
     | '/about/certifications'
@@ -188,8 +208,10 @@ export interface FileRouteTypes {
     | '/blog'
     | '/contact'
     | '/gallery'
+    | '/login'
     | '/products'
     | '/services'
+    | '/signup'
     | '/about/brands'
     | '/about/ceo'
     | '/about/certifications'
@@ -206,8 +228,10 @@ export interface FileRouteTypes {
     | '/blog'
     | '/contact'
     | '/gallery'
+    | '/login'
     | '/products'
     | '/services'
+    | '/signup'
     | '/about/brands'
     | '/about/ceo'
     | '/about/certifications'
@@ -225,14 +249,23 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRoute
   ContactRoute: typeof ContactRoute
   GalleryRoute: typeof GalleryRoute
+  LoginRoute: typeof LoginRoute
   ProductsRoute: typeof ProductsRouteWithChildren
   ServicesRoute: typeof ServicesRoute
+  SignupRoute: typeof SignupRoute
   BrandsSlugRoute: typeof BrandsSlugRoute
   BrandsIndexRoute: typeof BrandsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services': {
       id: '/services'
       path: '/services'
@@ -245,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof ProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -386,20 +426,13 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRoute,
   ContactRoute: ContactRoute,
   GalleryRoute: GalleryRoute,
+  LoginRoute: LoginRoute,
   ProductsRoute: ProductsRouteWithChildren,
   ServicesRoute: ServicesRoute,
+  SignupRoute: SignupRoute,
   BrandsSlugRoute: BrandsSlugRoute,
   BrandsIndexRoute: BrandsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

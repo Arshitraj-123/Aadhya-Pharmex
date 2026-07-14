@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Search, Phone, Menu, X } from "lucide-react";
+import { ChevronDown, Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/site/BrandLogo";
@@ -76,12 +76,14 @@ export function Navbar() {
           <button className={cn("hidden md:flex w-10 h-10 items-center justify-center rounded-full transition-smooth", scrolled ? "hover:bg-secondary text-foreground" : "hover:bg-white/15 text-white")} aria-label="Search">
             <Search className="w-4 h-4" />
           </button>
-          <Button asChild variant="hero" size="sm" className="hidden md:inline-flex">
-            <Link to="/contact">
-              <Phone className="w-4 h-4" />
-              Request Call Back
-            </Link>
-          </Button>
+          <div className="hidden md:flex items-center gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link to="/login">Sign In</Link>
+            </Button>
+            <Button asChild variant="hero" size="sm">
+              <Link to="/signup">Sign Up</Link>
+            </Button>
+          </div>
           <button onClick={() => setMobile(!mobile)} className={cn("lg:hidden w-10 h-10 flex items-center justify-center rounded-full", scrolled ? "hover:bg-secondary text-foreground" : "hover:bg-white/15 text-white")} aria-label="Menu">
             {mobile ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -116,11 +118,14 @@ export function Navbar() {
                   {it.label}
                 </Link>
               ))}
-              <Button asChild variant="hero" className="mt-2">
-                <Link to="/contact" onClick={() => setMobile(false)}>
-                  <Phone className="w-4 h-4" /> Request Call Back
-                </Link>
-              </Button>
+              <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+                <Button asChild variant="outline" size="sm" className="flex-1">
+                  <Link to="/login" onClick={() => setMobile(false)}>Sign In</Link>
+                </Button>
+                <Button asChild variant="hero" size="sm" className="flex-1">
+                  <Link to="/signup" onClick={() => setMobile(false)}>Sign Up</Link>
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}

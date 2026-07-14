@@ -111,7 +111,7 @@ function ProductsPage() {
               {paged.length === 0 ? (
                 <div className="py-20 text-center text-muted-foreground">No products found. Try adjusting your filters.</div>
               ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr gap-6">
   {paged.map((p, i) => (
     <ProductCard key={p.id} product={p} index={i} />
   ))}

@@ -16,10 +16,10 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, delay: (index % 4) * 0.08 }}
       whileHover={{ y: -8 }}
-      className="group relative bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-elegant transition-smooth border border-border/50"
+      className="group relative w-full h-full bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-elegant transition-smooth border border-border/50 flex flex-col"
     >
-      <button type="button" onClick={() => setOpen(true)} className="block w-full text-left">
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-secondary to-muted">
+      <button type="button" onClick={() => setOpen(true)} className="block w-full text-left flex-shrink-0">
+        <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-secondary to-muted">
           <img
             src={product.image}
             alt={product.name}
@@ -32,7 +32,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-smooth" />
         </div>
       </button>
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{product.brand}</div>
         <button type="button" onClick={() => setOpen(true)} className="text-left w-full">
           <h3 className="font-semibold text-foreground mt-1 line-clamp-1 group-hover:text-primary transition-smooth">{product.name}</h3>
@@ -42,7 +42,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <span className="text-xl font-bold text-primary">₹{product.price}</span>
           <span className="text-xs text-muted-foreground line-through">₹{product.mrp}</span>
         </div>
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-auto">
           <Button size="sm" variant="outline" className="flex-1" onClick={() => setOpen(true)}>
             <Eye className="w-3.5 h-3.5" />
             View
