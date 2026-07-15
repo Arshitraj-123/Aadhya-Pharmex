@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Search, Menu, X } from "lucide-react";
+import { ChevronDown, Search, Menu, ShoppingCart, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/site/BrandLogo";
+import { useCart } from "@/hooks/useCart";
 
 const aboutItems = [
   { to: "/about", label: "Overview" },
@@ -27,6 +28,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const [mobile, setMobile] = useState(false);
+  const { totalItems } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -76,6 +78,18 @@ export function Navbar() {
           <button className={cn("hidden md:flex w-10 h-10 items-center justify-center rounded-full transition-smooth", scrolled ? "hover:bg-secondary text-foreground" : "hover:bg-white/15 text-white")} aria-label="Search">
             <Search className="w-4 h-4" />
           </button>
+          <Link
+            to="/cart"
+            className={cn("relative flex h-10 w-10 items-center justify-center rounded-full transition-smooth", scrolled ? "hover:bg-secondary text-foreground" : "hover:bg-white/15 text-white")}
+            aria-label="Cart"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            {totalItems > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+                {totalItems}
+              </span>
+            )}
+          </Link>
           <div className="hidden md:flex items-center gap-2">
             <Button asChild variant="outline" size="sm">
               <Link to="/login">Sign In</Link>

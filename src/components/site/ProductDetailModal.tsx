@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, MessageCircle, Mail, ShieldCheck, Truck, Award, ChevronRight } from "lucide-react";
+import { X, MessageCircle, Mail, ShieldCheck, Truck, Award, ChevronRight, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { whatsappLink } from "@/lib/whatsapp";
 import { products, type Product } from "@/data/products";
+import { useCart } from "@/hooks/useCart";
 
 type Props = {
   product: Product | null;
@@ -16,6 +17,8 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
   const [activeImg, setActiveImg] = useState(0);
   const [zoom, setZoom] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const { addItem, getItemQuantity, updateQuantity } = useCart();
+  const quantity = getItemQuantity(product?.id ?? "");
 
   useEffect(() => {
     setActiveImg(0);
@@ -145,6 +148,24 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
                 </div>
 
                 <p className="mt-5 text-sm text-muted-foreground leading-relaxed">{product.description}</p>
+
+                <div className="mt-6">
+                  {quantity > 0 ? (
+                    <div className="flex w-fit items-center gap-2 rounded-full border border-border bg-background/80 p-1">
+                      <Button size="sm" variant="ghost" className="h-9 w-9 rounded-full" onClick={() => updateQuantity(product.id, quantity - 1)}>
+                        <Minus className="w-4 h-4" />
+                      </Button>
+                      <span className="min-w-8 text-center text-sm font-semibold">{quantity}</span>
+                      <Button size="sm" variant="ghost" className="h-9 w-9 rounded-full" onClick={() => updateQuantity(product.id, quantity + 1)}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button size="lg" className="w-full sm:w-auto" onClick={() => addItem(product)}>
+                      Add to Cart
+                    </Button>
+                  )}
+                </div>
 
                 <div className="flex flex-wrap gap-3 mt-6">
                   <Button asChild size="lg" variant="whatsapp" className="flex-1 min-w-[180px]">
