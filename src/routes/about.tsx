@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Us — Adhya Pharmex Healthcare" },
-      { name: "description", content: "Discover Adhya Pharmex Healthcare — a trusted pharmaceutical distributor with 20+ years of expertise serving 400+ retailers nationwide." },
-      { property: "og:title", content: "About Us — Adhya Pharmex Healthcare" },
+      { title: "About Us — Aadya Pharmex Healthcare" },
+      { name: "description", content: "Discover Aadya Pharmex Healthcare — a trusted pharmaceutical distributor with 20+ years of expertise serving 400+ retailers nationwide." },
+      { property: "og:title", content: "About Us — Aadya Pharmex Healthcare" },
       { property: "og:description", content: "20+ years of pharmaceutical distribution excellence." },
     ],
   }),
@@ -28,14 +28,14 @@ const subPages = [
 function AboutPage() {
   return (
     <PageShell>
-      <PageHeader eyebrow="About Adhya Pharmex" title="Distributing Trust Since 2003" subtitle="Two decades of building India's most reliable pharmaceutical supply network." />
+      <PageHeader eyebrow="About Aadya Pharmex" title="Distributing Trust Since 2003" subtitle="Two decades of building India's most reliable pharmaceutical supply network." />
 
       <section className="py-20">
         <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center">
           <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
             <h2 className="text-4xl font-bold leading-tight">An <span className="text-gradient-primary">overview</span> of who we are</h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              Adhya Pharmex Healthcare is a leading pharmaceutical distributor headquartered in Mumbai with a presence across 12 states. Since 2003, we have built a reputation for authenticity, on-time delivery and an uncompromising quality standard.
+              Aadya Pharmex Healthcare is a leading pharmaceutical distributor headquartered in Mumbai with a presence across 12 states. Since 2003, we have built a reputation for authenticity, on-time delivery and an uncompromising quality standard.
             </p>
             <p className="mt-3 text-muted-foreground leading-relaxed">
               Our 8000+ product catalog covers every major therapeutic segment — from acute care and chronic disease management to wellness, vitamins and specialty injections.

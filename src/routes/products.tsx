@@ -17,9 +17,9 @@ export const Route = createFileRoute("/products")({
   }),
   head: () => ({
     meta: [
-      { title: "Our Products — Adhya Pharmex Healthcare" },
+      { title: "Our Products — Aadya Pharmex Healthcare" },
       { name: "description", content: "Browse 8000+ premium medicines: tablets, syrups, injections, capsules, vitamins and more. Order via WhatsApp." },
-      { property: "og:title", content: "Our Products — Adhya Pharmex Healthcare" },
+      { property: "og:title", content: "Our Products — Aadya Pharmex Healthcare" },
       { property: "og:description", content: "8000+ pharmaceutical products across every therapeutic segment." },
     ],
   }),

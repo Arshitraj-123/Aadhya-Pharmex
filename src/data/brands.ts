@@ -19,7 +19,7 @@ export type Brand = {
 };
 
 export const brands: Brand[] = [
-  { slug: "medonix-pharma", name: "Adhya Pharmex Pharma", tagline: "Our In-House Excellence", description: "Premium in-house formulations across critical therapeutic segments, manufactured under strict WHO-GMP standards.", color: "from-emerald-700 to-amber-500", founded: "2008", country: "India" },
+  { slug: "medonix-pharma", name: "Aadya Pharmex Pharma", tagline: "Our In-House Excellence", description: "Premium in-house formulations across critical therapeutic segments, manufactured under strict WHO-GMP standards.", color: "from-emerald-700 to-amber-500", founded: "2008", country: "India" },
   { slug: "abbott", name: "Abbott", tagline: "A Promise For Life", description: "Global healthcare leader providing trusted medicines and diagnostics across 160+ countries.", color: "from-blue-700 to-cyan-500", founded: "1888", country: "USA" },
   { slug: "cipla", name: "Cipla", tagline: "Caring for Life", description: "Global pharmaceutical leader delivering high-quality, affordable medicines to patients in over 80 countries.", color: "from-sky-600 to-emerald-500", founded: "1935", country: "India" },
   { slug: "sun-pharma", name: "Sun Pharma", tagline: "Reaching People, Touching Lives", description: "India's largest pharmaceutical company and a top global specialty generics player.", color: "from-amber-600 to-orange-400", founded: "1983", country: "India" },
@@ -174,12 +174,12 @@ const brandCatalog: Record<string, Array<{ name: string; cat: keyof typeof imgMa
     { name: "Climax Spray", cat: "ointments", composition: "Lignocaine 12.5%" },
   ],
   "medonix-pharma": [
-    { name: "Adhya Pharmex Cough Relief", cat: "syrups", composition: "Dextromethorphan + CPM" },
-    { name: "Adhya Pharmex Pain-X 100", cat: "tablets", composition: "Aceclofenac" },
-    { name: "Adhya Pharmex B-Complex Forte", cat: "capsules", composition: "Vitamin B Complex" },
-    { name: "Adhya Pharmex Calci-D3", cat: "tablets", composition: "Calcium + Vit D3" },
-    { name: "Adhya Pharmex Antiseptic Cream", cat: "ointments", composition: "Chlorhexidine + Cetrimide" },
-    { name: "Adhya Pharmex Iron Tonic", cat: "syrups", composition: "Ferrous Ascorbate + Folic Acid" },
+    { name: "Aadya Pharmex Pain-X 100", cat: "tablets", composition: "Aceclofenac" },
+    { name: "Aadya Pharmex B-Complex Forte", cat: "capsules", composition: "Vitamin B Complex" },
+    { name: "Aadya Pharmex Cough Relief", cat: "syrups", composition: "Dextromethorphan + CPM" },
+    { name: "Aadya Pharmex Calci-D3", cat: "tablets", composition: "Calcium + Vit D3" },
+    { name: "Aadya Pharmex Antiseptic Cream", cat: "ointments", composition: "Chlorhexidine + Cetrimide" },
+    { name: "Aadya Pharmex Iron Tonic", cat: "syrups", composition: "Ferrous Ascorbate + Folic Acid" },
   ],
 };
 
@@ -199,7 +199,7 @@ for (const b of brands) {
       mrp, price,
       packing: it.cat === "syrups" ? "100ml Bottle" : it.cat === "injections" ? "1 Vial" : it.cat === "inhalers" ? "200 MDI" : it.cat === "ointments" ? "30g Tube" : it.cat === "drops" ? "10ml Bottle" : "Strip of 10",
       composition: it.composition,
-      description: `${it.name} by ${b.name} — authentic, quality-assured pharmaceutical product distributed by Adhya Pharmex Healthcare. Manufactured under strict GMP standards. Store in a cool, dry place. Read leaflet before use.`,
+      description: `${it.name} by ${b.name} — authentic, quality-assured pharmaceutical product distributed by Aadya Pharmex Healthcare. Manufactured under strict GMP standards. Store in a cool, dry place. Read leaflet before use.`,
     });
     nextId++;
   });

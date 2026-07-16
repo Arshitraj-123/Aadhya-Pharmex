@@ -6,7 +6,7 @@ import { PageShell, PageHeader } from "@/components/site/PageShell";
 export const Route = createFileRoute("/about/mission")({
   head: () => ({
     meta: [
-      { title: "Mission & Vision — Adhya Pharmex Healthcare" },
+      { title: "Mission & Vision — Aadya Pharmex Healthcare" },
       { name: "description", content: "Our mission is to make quality medicine accessible to every retailer in India. Our vision is to build the country's most trusted pharmaceutical distribution network." },
     ],
   }),

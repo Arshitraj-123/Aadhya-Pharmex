@@ -6,10 +6,10 @@ import { brands } from "@/data/brands";
 export const Route = createFileRoute("/brands/")({
   head: () => ({
     meta: [
-      { title: "Pharmaceutical Brands — Adhya Pharmex Healthcare" },
-      { name: "description", content: "Explore 50+ trusted pharmaceutical brands distributed by Adhya Pharmex Healthcare — Cipla, Sun Pharma, Dr. Reddy's, Lupin and more." },
-      { property: "og:title", content: "Pharmaceutical Brands — Adhya Pharmex Healthcare" },
-      { property: "og:description", content: "Browse trusted pharma brands distributed by Adhya Pharmex Healthcare." },
+      { title: "Pharmaceutical Brands — Aadya Pharmex Healthcare" },
+      { name: "description", content: "Explore 50+ trusted pharmaceutical brands distributed by Aadya Pharmex Healthcare — Cipla, Sun Pharma, Dr. Reddy's, Lupin and more." },
+      { property: "og:title", content: "Pharmaceutical Brands — Aadya Pharmex Healthcare" },
+      { property: "og:description", content: "Browse trusted pharma brands distributed by Aadya Pharmex Healthcare." },
     ],
   }),
   component: BrandsPage,

@@ -19,8 +19,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
-      { title: "Retailer Signup — Adhya Pharmex Healthcare" },
-      { name: "description", content: "Register as a retailer with Adhya Pharmex Healthcare to access our comprehensive pharmaceutical catalog and exclusive benefits." },
+      { title: "Retailer Signup — Aadya Pharmex Healthcare" },
+      { name: "description", content: "Register as a retailer with Aadya Pharmex Healthcare to access our comprehensive pharmaceutical catalog and exclusive benefits." },
     ],
   }),
   component: SignupPage,
@@ -81,7 +81,7 @@ function SignupPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      toast.success("Signup successful! Welcome to Adhya Pharmex.");
+      toast.success("Signup successful! Welcome to Aadya Pharmex.");
       setFormData({
         fullName: "",
         storeName: "",

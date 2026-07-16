@@ -240,7 +240,7 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
               <div className="rounded-xl bg-muted/50 border border-border p-4 text-xs text-muted-foreground leading-relaxed">
                 <strong className="text-foreground">Disclaimer:</strong> The information provided is for reference only and is not a
                 substitute for professional medical advice. Medicines should be used only on prescription from a registered
-                medical practitioner. Adhya Pharmex Healthcare is a licensed pharmaceutical distributor and dispenses products in
+                medical practitioner. Aadya Pharmex Healthcare is a licensed pharmaceutical distributor and dispenses products in
                 accordance with applicable laws and regulations.
               </div>
             </div>

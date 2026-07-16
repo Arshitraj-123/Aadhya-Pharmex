@@ -9,7 +9,7 @@ import { useCart } from "@/hooks/useCart";
 export const Route = createFileRoute("/cart")({
   head: () => ({
     meta: [
-      { title: "Your Cart — Adhya Pharmex Healthcare" },
+      { title: "Your Cart — Aadya Pharmex Healthcare" },
       { name: "description", content: "Review your selected medicines and proceed to checkout." },
     ],
   }),

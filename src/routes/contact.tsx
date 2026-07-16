@@ -9,8 +9,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact Us — Adhya Pharmex Healthcare" },
-      { name: "description", content: "Get in touch with Adhya Pharmex Healthcare. Request a callback, send an enquiry or visit our Mumbai headquarters." },
+      { title: "Contact Us — Aadya Pharmex Healthcare" },
+      { name: "description", content: "Get in touch with Aadya Pharmex Healthcare. Request a callback, send an enquiry or visit our Mumbai headquarters." },
     ],
   }),
   component: ContactPage,

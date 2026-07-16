@@ -6,7 +6,7 @@ import { PageShell, PageHeader } from "@/components/site/PageShell";
 export const Route = createFileRoute("/about/certifications")({
   head: () => ({
     meta: [
-      { title: "Certifications & Accreditations — Adhya Pharmex Healthcare" },
+      { title: "Certifications & Accreditations — Aadya Pharmex Healthcare" },
       { name: "description", content: "WHO-GMP, ISO 9001:2015, FSSAI and more — our complete list of pharmaceutical certifications." },
     ],
   }),

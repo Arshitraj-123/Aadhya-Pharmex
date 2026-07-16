@@ -9,8 +9,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Retailer Login — Adhya Pharmex Healthcare" },
-      { name: "description", content: "Login to your Adhya Pharmex Healthcare retailer account to manage orders and access exclusive features." },
+      { title: "Retailer Login — Aadya Pharmex Healthcare" },
+      { name: "description", content: "Login to your Aadya Pharmex Healthcare retailer account to manage orders and access exclusive features." },
     ],
   }),
   component: LoginPage,

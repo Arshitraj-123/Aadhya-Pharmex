@@ -5,7 +5,7 @@ import { PageShell, PageHeader } from "@/components/site/PageShell";
 export const Route = createFileRoute("/about/history")({
   head: () => ({
     meta: [
-      { title: "Company History — Adhya Pharmex Healthcare" },
+      { title: "Company History — Aadya Pharmex Healthcare" },
       { name: "description", content: "From a single-city distributor in 2003 to a pan-India pharmaceutical leader serving 400+ retailers." },
     ],
   }),
@@ -24,7 +24,7 @@ const milestones = [
 function HistoryPage() {
   return (
     <PageShell>
-      <PageHeader eyebrow="Our Journey" title="Two Decades of Growth" subtitle="Milestones that shaped Adhya Pharmex Healthcare." />
+      <PageHeader eyebrow="Our Journey" title="Two Decades of Growth" subtitle="Milestones that shaped Aadya Pharmex Healthcare." />
       <section className="py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="relative">

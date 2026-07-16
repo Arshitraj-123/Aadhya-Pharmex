@@ -5,7 +5,7 @@ import { PageShell, PageHeader } from "@/components/site/PageShell";
 export const Route = createFileRoute("/about/brands")({
   head: () => ({
     meta: [
-      { title: "Brands We Work With — Adhya Pharmex Healthcare" },
+      { title: "Brands We Work With — Aadya Pharmex Healthcare" },
       { name: "description", content: "Authorized distributor for 50+ leading pharmaceutical brands including Cipla, Sun Pharma, Lupin and more." },
     ],
   }),

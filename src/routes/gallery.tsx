@@ -15,7 +15,7 @@ import hero from "@/assets/hero-pharma.jpg";
 export const Route = createFileRoute("/gallery")({
   head: () => ({
     meta: [
-      { title: "Gallery — Adhya Pharmex Healthcare" },
+      { title: "Gallery — Aadya Pharmex Healthcare" },
       { name: "description", content: "Tour our facilities, products and team behind India's most trusted pharmaceutical distribution network." },
       { property: "og:image", content: hero },
     ],
