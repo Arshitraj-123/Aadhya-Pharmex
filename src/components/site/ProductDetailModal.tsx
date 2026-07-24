@@ -77,7 +77,7 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
               {/* LEFT: Image + thumbnails */}
               <div>
                 <div
-                  className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-secondary to-muted cursor-zoom-in"
+                  className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-secondary/80 to-muted/80 p-4 md:p-6 cursor-zoom-in"
                   onMouseEnter={() => setZoom(true)}
                   onMouseLeave={() => setZoom(false)}
                   onMouseMove={(e) => {
@@ -91,7 +91,7 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
                   <img
                     src={thumbs[activeImg]}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-300"
+                    className="w-full h-full object-contain object-center transition-transform duration-300"
                     style={{
                       transform: zoom ? "scale(1.8)" : "scale(1)",
                       transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
@@ -110,7 +110,7 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
                         activeImg === i ? "border-primary shadow-glow" : "border-border hover:border-primary/50"
                       }`}
                     >
-                      <img src={t} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                      <img src={t} alt={`${product.name} ${i + 1}`} className="w-full h-full object-contain object-center p-1" />
                     </button>
                   ))}
                 </div>
@@ -118,9 +118,6 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
 
               {/* RIGHT: Details */}
               <div>
-                <button className="text-xs uppercase tracking-widest text-primary font-bold mb-2 hover:underline">
-                  {product.brand}
-                </button>
                 <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{product.name}</h2>
 
                 <div className="flex items-baseline gap-3 mt-5 flex-wrap">
@@ -224,8 +221,8 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
                       onClick={onClose}
                       className="group rounded-xl border border-border hover:border-primary p-3 transition-smooth bg-background"
                     >
-                      <div className="aspect-square rounded-lg overflow-hidden bg-secondary mb-2">
-                        <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-smooth" />
+                      <div className="aspect-square rounded-lg overflow-hidden bg-secondary/80 p-2 mb-2">
+                        <img src={p.image} alt={p.name} className="w-full h-full object-contain object-center group-hover:scale-105 transition-smooth" />
                       </div>
                       <div className="text-xs font-semibold line-clamp-1">{p.name}</div>
                       <div className="text-sm font-bold text-primary mt-1">₹{p.price}</div>

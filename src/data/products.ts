@@ -7,7 +7,7 @@ import vitamins from "@/assets/product-vitamins.jpg";
 import drops from "@/assets/product-drops.jpg";
 import inhaler from "@/assets/product-inhaler.jpg";
 import hajmola from "@/assets/hajmola-candy.jpg";
-import { productImageMap } from "./productImages";
+import { resolveProductImage } from "./productImages";
 
 
 
@@ -542,6 +542,8 @@ const brands = [
   "Torrent",
 ];
 
+const unmatchedProductNames: string[] = [];
+
 export const products: Product[] = (() => {
   const list: Product[] = [];
   let id = 1;
@@ -552,13 +554,19 @@ export const products: Product[] = (() => {
     names.forEach((name, i) => {
       const mrp = 80 + ((id * 37) % 900);
       const price = Math.round(mrp * 0.82);
+      const fallbackImage = imgMap[cat.slug] || tablet;
+      const { image, matched } = resolveProductImage(name, fallbackImage);
+
+      if (!matched) {
+        unmatchedProductNames.push(name);
+      }
 
       list.push({
         id: String(id++),
         name,
         brand: brands[(id + i) % brands.length],
         category: cat.slug,
-        image: productImageMap[name] || imgMap[cat.slug] || tablet,
+        image,
         mrp,
         price,
         packing:
@@ -580,6 +588,8 @@ export const products: Product[] = (() => {
 
   return list;
 })();
+
+export const unmatchedProductImages = Array.from(new Set(unmatchedProductNames));
 
 export const featuredProducts = products
   .filter((_, i) => i % 2 === 0)

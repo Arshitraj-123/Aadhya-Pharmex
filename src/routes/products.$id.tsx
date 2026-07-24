@@ -57,17 +57,16 @@ function ProductDetail() {
           <div className="grid lg:grid-cols-2 gap-12">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}>
               <div
-                className="relative aspect-square rounded-3xl overflow-hidden bg-card shadow-elegant cursor-zoom-in"
+                className="relative aspect-square rounded-3xl overflow-hidden bg-card shadow-elegant cursor-zoom-in p-4 md:p-6"
                 onMouseEnter={() => setZoom(true)} onMouseLeave={() => setZoom(false)}
               >
                 <img src={product.image} alt={product.name}
-                  className={`w-full h-full object-cover transition-smooth duration-700 ${zoom ? "scale-150" : "scale-100"}`} />
+                  className={`w-full h-full object-contain object-center transition-smooth duration-700 ${zoom ? "scale-150" : "scale-100"}`} />
                 <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-accent text-accent-foreground text-xs font-bold shadow-md">{discount}% OFF</div>
               </div>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }}>
-              <div className="text-xs uppercase tracking-widest text-primary font-bold mb-2">{product.brand}</div>
               <h1 className="text-4xl font-bold tracking-tight">{product.name}</h1>
               <div className="flex items-baseline gap-3 mt-5">
                 <span className="text-4xl font-bold text-gradient-primary">₹{product.price}</span>
@@ -77,7 +76,6 @@ function ProductDetail() {
 
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <Spec label="Packing" value={product.packing} />
-                <Spec label="Brand" value={product.brand} />
                 <Spec label="Category" value={product.category} />
                 <Spec label="Composition" value={product.composition} />
               </div>

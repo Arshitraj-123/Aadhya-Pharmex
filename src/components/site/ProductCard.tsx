@@ -23,12 +23,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       className="group relative w-full h-full bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-elegant transition-smooth border border-border/50 flex flex-col"
     >
       <button type="button" onClick={() => setOpen(true)} className="block w-full text-left flex-shrink-0">
-        <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-secondary to-muted">
+        <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-secondary/80 to-muted/80">
           <img
             src={product.image}
             alt={product.name}
             loading="lazy"
-            className="w-full h-full object-cover group-hover:scale-110 transition-smooth duration-500"
+            className="w-full h-full object-contain object-center p-4 sm:p-5 group-hover:scale-105 transition-smooth duration-500"
           />
           <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-accent/90 backdrop-blur text-accent-foreground text-[10px] font-bold uppercase tracking-wider">
             {Math.round(((product.mrp - product.price) / product.mrp) * 100)}% OFF
@@ -37,7 +37,6 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         </div>
       </button>
       <div className="p-4 flex-1 flex flex-col">
-        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{product.brand}</div>
         <button type="button" onClick={() => setOpen(true)} className="text-left w-full">
           <h3 className="font-semibold text-foreground mt-1 line-clamp-1 group-hover:text-primary transition-smooth">{product.name}</h3>
         </button>

@@ -22,12 +22,11 @@ export function CartItem({ item, onIncrease, onDecrease, onRemove }: Props) {
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-4">
-          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary">
-            <img src={item.product.image} alt={item.product.name} className="h-full w-full object-cover" />
+          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-secondary/80 p-2">
+            <img src={item.product.image} alt={item.product.name} className="h-full w-full object-contain object-center" />
           </div>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">{item.product.brand}</p>
-            <h3 className="mt-1 font-semibold text-foreground">{item.product.name}</h3>
+            <h3 className="font-semibold text-foreground">{item.product.name}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{item.product.packing}</p>
             <div className="mt-2 text-sm font-semibold text-primary">₹{item.product.price}</div>
           </div>
