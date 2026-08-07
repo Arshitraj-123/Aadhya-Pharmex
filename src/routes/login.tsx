@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, LogIn, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import api from "@/lib/axios";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -17,8 +19,12 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  const navigate = Route.useNavigate();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [authStep, setAuthStep] = useState(1);
+  const [otp, setOtp] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -29,18 +35,46 @@ function LoginPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) {
-      toast.error("Please fill in all fields");
-      return;
+    if (authStep === 1) {
+      if (!formData.email || !formData.password) {
+        toast.error("Please fill in all fields");
+        return;
+      }
+      setLoading(true);
+      try {
+        await api.post("/auth/login", {
+          email: formData.email,
+          password: formData.password,
+        });
+        toast.success("Credentials verified! Please enter the 2FA code.");
+        setAuthStep(2);
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Login failed");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (otp.length !== 4) {
+        toast.error("Please enter the 4-digit OTP");
+        return;
+      }
+      setLoading(true);
+      try {
+        const res = await api.post("/auth/login-verify", {
+          email: formData.email,
+          otp,
+        });
+        login(res.data.token, res.data.user);
+        toast.success("Login successful! Welcome back.");
+        navigate({ to: "/" });
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Invalid OTP");
+      } finally {
+        setLoading(false);
+      }
     }
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success("Login successful! Welcome back.");
-      setFormData({ email: "", password: "" });
-    }, 1000);
   };
 
   const containerVariants = {
@@ -61,93 +95,152 @@ function LoginPage() {
             onSubmit={onSubmit}
             className="space-y-5"
           >
-            {/* Email Field */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="relative"
-            >
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@example.com"
-                  className="w-full pl-11 pr-4 h-11 rounded-lg bg-secondary border border-border focus:border-primary outline-none transition-smooth text-foreground placeholder:text-muted-foreground"
-                />
-              </div>
-            </motion.div>
-
-            {/* Password Field */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15 }}
-              className="relative"
-            >
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className="w-full pl-11 pr-11 h-11 rounded-lg bg-secondary border border-border focus:border-primary outline-none transition-smooth text-foreground placeholder:text-muted-foreground"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-smooth"
-                  aria-label="Toggle password visibility"
+            {authStep === 1 ? (
+              <>
+                {/* Email Field */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="relative"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </motion.div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="you@example.com"
+                      className="w-full pl-11 pr-4 h-11 rounded-lg bg-secondary border border-border focus:border-primary outline-none transition-smooth text-foreground placeholder:text-muted-foreground"
+                    />
+                  </div>
+                </motion.div>
 
-            {/* Remember & Forgot */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center justify-between text-sm"
-            >
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded accent-primary" />
-                <span className="text-muted-foreground">Remember me</span>
-              </label>
-              <a href="#" className="text-primary hover:underline font-medium">
-                Forgot password?
-              </a>
-            </motion.div>
+                {/* Password Field */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="relative"
+                >
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      className="w-full pl-11 pr-11 h-11 rounded-lg bg-secondary border border-border focus:border-primary outline-none transition-smooth text-foreground placeholder:text-muted-foreground"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-smooth"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </motion.div>
 
-            {/* Login Button */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-            >
-              <Button
-                type="submit"
-                disabled={loading}
-                variant="hero"
-                size="lg"
-                className="w-full"
-              >
-                <LogIn className="w-4 h-4" />
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-            </motion.div>
+                {/* Remember & Forgot */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 rounded accent-primary" />
+                    <span className="text-muted-foreground">Remember me</span>
+                  </label>
+                  <a href="#" className="text-primary hover:underline font-medium">
+                    Forgot password?
+                  </a>
+                </motion.div>
+
+                {/* Login Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                >
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    variant="hero"
+                    size="lg"
+                    className="w-full"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    {loading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                {/* OTP Field */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="relative text-center"
+                >
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
+                    <ShieldCheck className="h-7 w-7" />
+                  </div>
+                  <h2 className="text-xl font-bold text-foreground mb-2">Two-Factor Authentication</h2>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Enter the 4-digit code sent to your registered credentials.
+                  </p>
+                  
+                  <div className="relative max-w-[200px] mx-auto">
+                    <input
+                      type="text"
+                      maxLength={4}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      placeholder="••••"
+                      className="w-full text-center tracking-[0.75em] text-2xl font-bold h-14 rounded-xl bg-secondary border border-border focus:border-primary outline-none transition-smooth text-foreground"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Verify Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="pt-4"
+                >
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    variant="hero"
+                    size="lg"
+                    className="w-full"
+                  >
+                    {loading ? "Verifying..." : "Verify & Continue"}
+                  </Button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setAuthStep(1)}
+                    className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground transition-smooth"
+                  >
+                    Back to email
+                  </button>
+                </motion.div>
+              </>
+            )}
 
             {/* Signup Link */}
             <motion.div

@@ -15,6 +15,7 @@ import {
 import { PageShell, PageHeader } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import api from "@/lib/axios";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -55,7 +56,8 @@ function SignupPage() {
     }
   };
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const navigate = Route.useNavigate();
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (
       !formData.fullName ||
@@ -79,8 +81,15 @@ function SignupPage() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await api.post("/auth/register", {
+        fullName: formData.fullName,
+        storeName: formData.storeName,
+        email: formData.email,
+        password: formData.password,
+        role: "Retailer",
+        city: formData.city
+      });
       toast.success("Signup successful! Welcome to Aadya Pharmex.");
       setFormData({
         fullName: "",
@@ -92,7 +101,12 @@ function SignupPage() {
         confirmPassword: "",
         agreeTerms: false,
       });
-    }, 1200);
+      navigate({ to: "/login" });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const containerVariants = {

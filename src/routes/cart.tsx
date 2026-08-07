@@ -1,10 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { ArrowRight, ShoppingBag, Store } from "lucide-react";
+import { ArrowRight, ShoppingBag, Store, Loader2 } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/site/PageShell";
 import { CartItem } from "@/components/site/CartItem";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import api from "@/lib/axios";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -17,9 +21,50 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { items, updateQuantity, removeItem, totalItems, totalAmount } = useCart();
+  const navigate = Route.useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const { items, updateQuantity, removeItem, clearCart, totalItems, totalAmount } = useCart();
+  const [loading, setLoading] = useState(false);
 
   const formatCurrency = (value: number) => `₹${value.toLocaleString("en-IN")}`;
+
+  const handleCheckout = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to proceed with checkout.");
+      navigate({ to: "/login" });
+      return;
+    }
+
+    if (!user?.retailerId) {
+      toast.error("No linked retailer account found. Cannot place order.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Format items for the backend
+      const orderItems = items.map((item) => ({
+        productId: item.product.id,
+        qtyOrdered: item.quantity,
+        rate: item.product.price, // PTR
+        gstRate: 18 // Default 18% GST for demo
+      }));
+
+      await api.post("/orders", {
+        retailerId: user.retailerId,
+        items: orderItems,
+        paymentMode: "COD"
+      });
+
+      toast.success("Order placed successfully! Live updates sent to Admin Dashboard.");
+      clearCart();
+      navigate({ to: "/products" });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Checkout failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <PageShell>
@@ -91,9 +136,23 @@ function CartPage() {
                       Continue Shopping
                     </Link>
                   </Button>
-                  <Button className="w-full" variant="hero">
-                    Proceed to Checkout
-                    <ArrowRight className="h-4 w-4" />
+                  <Button 
+                    className="w-full" 
+                    variant="hero" 
+                    onClick={handleCheckout}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Placing Order...
+                      </>
+                    ) : (
+                      <>
+                        Proceed to Checkout
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </motion.aside>

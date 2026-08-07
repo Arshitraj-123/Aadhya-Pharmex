@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/site/PageShell";
 import { ProductCard } from "@/components/site/ProductCard";
-import { products, categories } from "@/data/products";
+import { categories } from "@/data/products";
 import { Button } from "@/components/ui/button";
+import api from "@/lib/axios";
 
 type Search = { category?: string; page?: number; q?: string };
 
@@ -33,15 +34,43 @@ function ProductsPage() {
   const navigate = Route.useNavigate();
   const [query, setQuery] = useState(search.q ?? "");
   const [maxPrice, setMaxPrice] = useState(1000);
+  const [liveProducts, setLiveProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await api.get("/products");
+        const mapped = res.data.products.map((p: any) => ({
+          id: p._id,
+          name: p.tradeName,
+          brand: p.companyId?.name || "Generic",
+          category: p.category || "counter-products",
+          image: p.category || "counter-products",
+          mrp: p.mrp || 10,
+          price: p.ptr || 8,
+          packing: p.sku || "10 Tabs",
+          composition: p.genericName || "Standard",
+          description: p.genericName || "No description available"
+        }));
+        setLiveProducts(mapped);
+      } catch (err) {
+        console.error("Error fetching live products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    return liveProducts.filter((p) => {
       if (search.category && p.category !== search.category) return false;
       if (query && !p.name.toLowerCase().includes(query.toLowerCase())) return false;
       if (p.price > maxPrice) return false;
       return true;
     });
-  }, [search.category, query, maxPrice]);
+  }, [liveProducts, search.category, query, maxPrice]);
 
   const page = search.page ?? 1;
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -103,33 +132,42 @@ function ProductsPage() {
 
             {/* Grid */}
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-semibold text-foreground">{paged.length}</span> of {filtered.length} products
-                </p>
-              </div>
-              {paged.length === 0 ? (
-                <div className="py-20 text-center text-muted-foreground">No products found. Try adjusting your filters.</div>
-              ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr gap-6">
-  {paged.map((p, i) => (
-    <ProductCard key={p.id} product={p} index={i} />
-  ))}
-</div>
-              )}
-
-              {totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-12">
-                  {Array.from({ length: totalPages }).map((_, i) => {
-                    const n = i + 1;
-                    return (
-                      <Link key={n} to="/products" search={{ ...search, page: n }}
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-smooth ${n === page ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-card border border-border hover:border-primary"}`}>
-                        {n}
-                      </Link>
-                    );
-                  })}
+              {loading ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                  <span className="ml-2 text-muted-foreground">Loading products...</span>
                 </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-6">
+                    <p className="text-sm text-muted-foreground">
+                      Showing <span className="font-semibold text-foreground">{paged.length}</span> of {filtered.length} products
+                    </p>
+                  </div>
+                  {paged.length === 0 ? (
+                    <div className="py-20 text-center text-muted-foreground">No products found. Try adjusting your filters.</div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 auto-rows-fr gap-6">
+                      {paged.map((p, i) => (
+                        <ProductCard key={p.id} product={p} index={i} />
+                      ))}
+                    </div>
+                  )}
+
+                  {totalPages > 1 && (
+                    <div className="flex justify-center gap-2 mt-12">
+                      {Array.from({ length: totalPages }).map((_, i) => {
+                        const n = i + 1;
+                        return (
+                          <Link key={n} to="/products" search={{ ...search, page: n }}
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-smooth ${n === page ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-card border border-border hover:border-primary"}`}>
+                            {n}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

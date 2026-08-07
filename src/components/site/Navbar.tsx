@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Search, Menu, ShoppingCart, X } from "lucide-react";
+import { ChevronDown, Search, Menu, ShoppingCart, X, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/site/BrandLogo";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/contexts/AuthContext";
 
 const aboutItems = [
   { to: "/about", label: "Overview" },
@@ -29,6 +30,7 @@ export function Navbar() {
   const [open, setOpen] = useState<string | null>(null);
   const [mobile, setMobile] = useState(false);
   const { totalItems } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -91,13 +93,34 @@ export function Navbar() {
             )}
           </Link>
           <div className="hidden md:flex items-center gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link to="/login">Sign In</Link>
-            </Button>
-            <Button asChild variant="hero" size="sm">
-              <Link to="/signup">Sign Up</Link>
-            </Button>
-          </div>
+          {isAuthenticated ? (
+            <div className="hidden md:flex items-center gap-3">
+              <span className={cn("text-xs font-semibold px-2.5 py-1 rounded bg-secondary", scrolled ? "text-foreground" : "text-white bg-white/10")}>
+                Hi, {user?.fullName.split(" ")[0]}
+              </span>
+              {(user?.role === "Admin" || user?.role === "Super Admin") && (
+                <Button asChild variant="outline" size="sm">
+                  <a href={import.meta.env.DEV ? "http://localhost:5173" : "https://pharma-app-a2im.onrender.com"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                    <LayoutDashboard className="w-4 h-4" />
+                    Admin Panel
+                  </a>
+                </Button>
+              )}
+              <Button onClick={logout} variant="hero" size="sm" className="flex items-center gap-1.5">
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/login">Sign In</Link>
+              </Button>
+              <Button asChild variant="hero" size="sm">
+                <Link to="/signup">Sign Up</Link>
+              </Button>
+            </div>
+          )}
           <button onClick={() => setMobile(!mobile)} className={cn("lg:hidden w-10 h-10 flex items-center justify-center rounded-full", scrolled ? "hover:bg-secondary text-foreground" : "hover:bg-white/15 text-white")} aria-label="Menu">
             {mobile ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -132,14 +155,34 @@ export function Navbar() {
                   {it.label}
                 </Link>
               ))}
-              <div className="flex gap-2 mt-4 pt-4 border-t border-border">
-                <Button asChild variant="outline" size="sm" className="flex-1">
-                  <Link to="/login" onClick={() => setMobile(false)}>Sign In</Link>
-                </Button>
-                <Button asChild variant="hero" size="sm" className="flex-1">
-                  <Link to="/signup" onClick={() => setMobile(false)}>Sign Up</Link>
-                </Button>
-              </div>
+              {isAuthenticated ? (
+                <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
+                  <span className="px-4 py-2 text-sm font-semibold text-muted-foreground">
+                    Logged in as: {user?.fullName} ({user?.role})
+                  </span>
+                  {(user?.role === "Admin" || user?.role === "Super Admin") && (
+                    <Button asChild variant="outline" size="sm" className="w-full">
+                      <a href={import.meta.env.DEV ? "http://localhost:5173" : "https://pharma-app-a2im.onrender.com"} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5">
+                        <LayoutDashboard className="w-4 h-4" />
+                        Admin Panel
+                      </a>
+                    </Button>
+                  )}
+                  <Button onClick={() => { logout(); setMobile(false); }} variant="hero" size="sm" className="w-full flex items-center justify-center gap-1.5">
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2 mt-4 pt-4 border-t border-border">
+                  <Button asChild variant="outline" size="sm" className="flex-1">
+                    <Link to="/login" onClick={() => setMobile(false)}>Sign In</Link>
+                  </Button>
+                  <Button asChild variant="hero" size="sm" className="flex-1">
+                    <Link to="/signup" onClick={() => setMobile(false)}>Sign Up</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
