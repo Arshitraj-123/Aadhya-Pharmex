@@ -100,7 +100,7 @@ export function Navbar() {
               </span>
               {(user?.role === "Admin" || user?.role === "Super Admin") && (
                 <Button asChild variant="outline" size="sm">
-                  <a href={import.meta.env.DEV ? "http://localhost:5173" : "https://pharma-app-a2im.onrender.com"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                  <a href="/admin/" className="flex items-center gap-1.5">
                     <LayoutDashboard className="w-4 h-4" />
                     Admin Panel
                   </a>
@@ -162,7 +162,7 @@ export function Navbar() {
                   </span>
                   {(user?.role === "Admin" || user?.role === "Super Admin") && (
                     <Button asChild variant="outline" size="sm" className="w-full">
-                      <a href={import.meta.env.DEV ? "http://localhost:5173" : "https://pharma-app-a2im.onrender.com"} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5">
+                      <a href="/admin/" className="flex items-center justify-center gap-1.5">
                         <LayoutDashboard className="w-4 h-4" />
                         Admin Panel
                       </a>
