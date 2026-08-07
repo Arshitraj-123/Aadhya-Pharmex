@@ -92,7 +92,6 @@ export function Navbar() {
               </span>
             )}
           </Link>
-          <div className="hidden md:flex items-center gap-2">
           {isAuthenticated ? (
             <div className="hidden md:flex items-center gap-3">
               <span className={cn("text-xs font-semibold px-2.5 py-1 rounded bg-secondary", scrolled ? "text-foreground" : "text-white bg-white/10")}>
