@@ -7,6 +7,8 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { categories } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
+import { resolveProductImage } from "@/data/productImages";
+import tablet from "@/assets/product-tablet.jpg";
 
 type Search = { category?: string; page?: number; q?: string };
 
@@ -46,7 +48,7 @@ function ProductsPage() {
           name: p.tradeName,
           brand: p.companyId?.name || "Generic",
           category: p.category || "counter-products",
-          image: p.category || "counter-products",
+          image: resolveProductImage(p.tradeName, tablet).image,
           mrp: p.mrp || 10,
           price: p.ptr || 8,
           packing: p.sku || "10 Tabs",

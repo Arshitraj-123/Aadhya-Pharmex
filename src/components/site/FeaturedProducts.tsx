@@ -6,11 +6,18 @@ import { ProductCard } from "./ProductCard";
 import { featuredProducts as staticFeaturedProducts } from "@/data/products";
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
+import { useAuth } from "@/hooks/useAuth";
+import { resolveProductImage } from "@/data/productImages";
+import tablet from "@/assets/product-tablet.jpg";
 
 export function FeaturedProducts() {
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
+    // Only call the protected products API if the user is logged in
+    if (!isAuthenticated) return;
+
     const fetchProducts = async () => {
       try {
         const res = await api.get("/products");
@@ -19,7 +26,7 @@ export function FeaturedProducts() {
           name: p.tradeName,
           brand: p.companyId?.name || "Generic",
           category: p.category || "counter-products",
-          image: p.category || "counter-products",
+          image: resolveProductImage(p.tradeName, tablet).image,
           mrp: p.mrp || 10,
           price: p.ptr || 8,
           packing: p.sku || "10 Tabs",
@@ -34,7 +41,7 @@ export function FeaturedProducts() {
       }
     };
     fetchProducts();
-  }, []);
+  }, [isAuthenticated]);
 
   const itemsToDisplay = products.length > 0 ? products : staticFeaturedProducts.slice(0, 4);
 
