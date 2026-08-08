@@ -6,7 +6,7 @@ import { ProductCard } from "./ProductCard";
 import { featuredProducts as staticFeaturedProducts } from "@/data/products";
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { resolveProductImage } from "@/data/productImages";
 import tablet from "@/assets/product-tablet.jpg";
 
