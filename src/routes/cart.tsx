@@ -40,6 +40,14 @@ function CartPage() {
       return;
     }
 
+    // Filter out outdated/mock products from old local storage
+    const invalidItems = items.filter(item => !/^[0-9a-fA-F]{24}$/.test(item.product.id));
+    if (invalidItems.length > 0) {
+      toast.error("Outdated items detected in your cart. Removing them automatically. Please add products again.");
+      invalidItems.forEach(item => removeItem(item.product.id));
+      return;
+    }
+
     setLoading(true);
     try {
       // Format items for the backend
