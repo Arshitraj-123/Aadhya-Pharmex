@@ -3,9 +3,41 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "./ProductCard";
-import { featuredProducts } from "@/data/products";
+import { featuredProducts as staticFeaturedProducts } from "@/data/products";
+import { useEffect, useState } from "react";
+import api from "@/lib/axios";
 
 export function FeaturedProducts() {
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await api.get("/products");
+        const mapped = res.data.products.map((p: any) => ({
+          id: p._id,
+          name: p.tradeName,
+          brand: p.companyId?.name || "Generic",
+          category: p.category || "counter-products",
+          image: p.category || "counter-products",
+          mrp: p.mrp || 10,
+          price: p.ptr || 8,
+          packing: p.sku || "10 Tabs",
+          composition: p.genericName || "Standard",
+          description: p.genericName || "No description available"
+        }));
+        if (mapped.length > 0) {
+          setProducts(mapped.slice(0, 4));
+        }
+      } catch (err) {
+        console.error("Error fetching live featured products:", err);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const itemsToDisplay = products.length > 0 ? products : staticFeaturedProducts.slice(0, 4);
+
   return (
     <section className="py-24 bg-gradient-soft">
       <div className="container mx-auto px-4">
@@ -27,7 +59,7 @@ export function FeaturedProducts() {
           </Button>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredProducts.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+          {itemsToDisplay.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
         </div>
       </div>
     </section>

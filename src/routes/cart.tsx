@@ -53,7 +53,7 @@ function CartPage() {
       await api.post("/orders", {
         retailerId: user.retailerId,
         items: orderItems,
-        paymentMode: "COD"
+        paymentMode: "Cash"
       });
 
       toast.success("Order placed successfully! Live updates sent to Admin Dashboard.");

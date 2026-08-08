@@ -7,10 +7,33 @@ import { ProductCard } from "@/components/site/ProductCard";
 import { Button } from "@/components/ui/button";
 import { getProductById, products } from "@/data/products";
 import { whatsappLink } from "@/lib/whatsapp";
+import api from "@/lib/axios";
 
 export const Route = createFileRoute("/products/$id")({
-  loader: ({ params }) => {
-    const product = getProductById(params.id);
+  loader: async ({ params }) => {
+    let product = getProductById(params.id);
+    if (!product) {
+      try {
+        const res = await api.get("/products");
+        const p = res.data.products.find((item: any) => item._id === params.id);
+        if (p) {
+          product = {
+            id: p._id,
+            name: p.tradeName,
+            brand: p.companyId?.name || "Generic",
+            category: p.category || "counter-products",
+            image: p.category || "counter-products",
+            mrp: p.mrp || 10,
+            price: p.ptr || 8,
+            packing: p.sku || "10 Tabs",
+            composition: p.genericName || "Standard",
+            description: p.genericName || "No description available"
+          };
+        }
+      } catch (err) {
+        console.error("Error loading product from API:", err);
+      }
+    }
     if (!product) throw notFound();
     return { product };
   },
