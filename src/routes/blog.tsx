@@ -9,8 +9,8 @@ import tablet from "@/assets/product-tablet.jpg";
 export const Route = createFileRoute("/blog")({
   head: () => ({
     meta: [
-      { title: "Blogs & News — Aadya Pharmex Healthcare" },
-      { name: "description", content: "Industry insights, regulatory updates and pharmaceutical distribution news from Aadya Pharmex." },
+      { title: "Blogs & News — Aadya Medicine Agencies" },
+      { name: "description", content: "Industry insights, regulatory updates and pharmaceutical distribution news from Aadya Medicine Agencies." },
     ],
   }),
   component: BlogPage,

@@ -11,8 +11,8 @@ import { useAuth } from "@/contexts/AuthContext";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Retailer Login — Aadya Pharmex Healthcare" },
-      { name: "description", content: "Login to your Aadya Pharmex Healthcare retailer account to manage orders and access exclusive features." },
+      { title: "Retailer Login — Aadya Medicine Agencies" },
+      { name: "description", content: "Login to your Aadya Medicine Agencies retailer account to manage orders and access exclusive features." },
     ],
   }),
   component: LoginPage,

@@ -16,9 +16,9 @@ export const Route = createFileRoute("/brands/$slug")({
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.brand.name} Medicines — Aadya Pharmex Healthcare` },
-          { name: "description", content: `Browse authentic ${loaderData.brand.name} medicines distributed by Aadya Pharmex Healthcare. ${loaderData.brand.tagline}.` },
-          { property: "og:title", content: `${loaderData.brand.name} — Aadya Pharmex Healthcare` },
+          { title: `${loaderData.brand.name} Medicines — Aadya Medicine Agencies` },
+          { name: "description", content: `Browse authentic ${loaderData.brand.name} medicines distributed by Aadya Medicine Agencies. ${loaderData.brand.tagline}.` },
+          { property: "og:title", content: `${loaderData.brand.name} — Aadya Medicine Agencies` },
           { property: "og:description", content: loaderData.brand.description },
         ]
       : [],

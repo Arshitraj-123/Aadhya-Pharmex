@@ -46,7 +46,7 @@ export function CallbackSection() {
 
               <div className="absolute bottom-6 left-6 right-6 glass-dark rounded-2xl p-5 text-white">
                 <p className="text-sm opacity-80">Customer Care Hotline</p>
-                <p className="text-2xl font-bold">+91 99999 99999</p>
+                <p className="text-2xl font-bold">+91 72175 21744</p>
               </div>
             </div>
 

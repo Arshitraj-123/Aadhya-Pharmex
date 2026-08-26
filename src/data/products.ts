@@ -532,7 +532,7 @@ const sampleNames: Record<string, string[]> = {
 };
 
 const brands = [
-  "Aadya Pharmex",
+  "Aadya Medicine Agencies",
   "Cipla",
   "Sun Pharma",
   "Dr. Reddy's",
@@ -581,7 +581,7 @@ export const products: Product[] = (() => {
             : "Standard Pack",
         composition: name,
         description:
-          "Premium quality healthcare product available at Aadya Pharmex. Manufactured under strict quality standards and trusted by customers across multiple healthcare categories.",
+          "Premium quality healthcare product available at Aadya Medicine Agencies. Manufactured under strict quality standards and trusted by customers across multiple healthcare categories.",
       });
     });
   }

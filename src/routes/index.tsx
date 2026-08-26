@@ -10,10 +10,10 @@ import { CallbackSection } from "@/components/site/CallbackSection";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Aadya Pharmex Healthcare — Trusted Pharmaceutical Distributor" },
-      { name: "description", content: "Premium pharmaceutical distributor delivering 8000+ medicines from 50+ leading brands to 400+ retailers across India. WHO-GMP certified." },
-      { property: "og:title", content: "Aadya Pharmex Healthcare — Trusted Pharmaceutical Distributor" },
-      { property: "og:description", content: "Premium medicines, dependable distribution. Serving 400+ retailers nationwide." },
+      { title: "Aadya Medicine Agencies — Trusted Pharmaceutical Distributor" },
+      { name: "description", content: "Trusted pharmaceutical distributor delivering quality medicines to retailers. GSTIN: 09MHMPK6914Q1Z5. Based in Saharanpur, Uttar Pradesh." },
+      { property: "og:title", content: "Aadya Medicine Agencies — Trusted Pharmaceutical Distributor" },
+      { property: "og:description", content: "Quality medicines, dependable distribution. Serving retailers across Uttar Pradesh." },
     ],
   }),
   component: Index,

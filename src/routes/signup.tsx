@@ -20,8 +20,8 @@ import api from "@/lib/axios";
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
-      { title: "Retailer Signup — Aadya Pharmex Healthcare" },
-      { name: "description", content: "Register as a retailer with Aadya Pharmex Healthcare to access our comprehensive pharmaceutical catalog and exclusive benefits." },
+      { title: "Retailer Signup — Aadya Medicine Agencies" },
+      { name: "description", content: "Register as a retailer with Aadya Medicine Agencies to access our comprehensive pharmaceutical catalog and exclusive benefits." },
     ],
   }),
   component: SignupPage,
@@ -90,7 +90,7 @@ function SignupPage() {
         role: "Retailer",
         city: formData.city
       });
-      toast.success("Signup successful! Welcome to Aadya Pharmex.");
+      toast.success("Signup successful! Welcome to Aadya Medicine Agencies.");
       setFormData({
         fullName: "",
         storeName: "",

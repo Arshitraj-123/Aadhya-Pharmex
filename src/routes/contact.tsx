@@ -9,8 +9,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact Us — Aadya Pharmex Healthcare" },
-      { name: "description", content: "Get in touch with Aadya Pharmex Healthcare. Request a callback, send an enquiry or visit our Mumbai headquarters." },
+      { title: "Contact Us — Aadya Medicine Agencies" },
+      { name: "description", content: "Get in touch with Aadya Medicine Agencies. Request a callback, send an enquiry or visit our Saharanpur office." },
     ],
   }),
   component: ContactPage,
@@ -37,8 +37,8 @@ function ContactPage() {
         <div className="container mx-auto px-4 grid lg:grid-cols-[1fr_1.4fr] gap-10 max-w-6xl">
           <div className="space-y-4">
             {[
-              { icon: MapPin, t: "Headquarters", d: "14 Pharma Street, Industrial Area\nNoida, Uttar Prdesh 201301" },
-              { icon: Phone, t: "Phone", d: "+91 99999 99999\n+91 88888 88888" },
+              { icon: MapPin, t: "Office", d: "Nagar Nigam No. 14/1679, Kishanpura\nSaharanpur, Uttar Pradesh 247001" },
+              { icon: Phone, t: "Phone", d: "+91 72175 21744" },
               { icon: Mail, t: "Email", d: "hello@aadya.com" },
               { icon: Clock, t: "Working Hours", d: "Mon – Sat: 9:00 AM – 7:00 PM\nSunday: Closed" },
             ].map((c, i) => (

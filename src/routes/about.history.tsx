@@ -5,7 +5,7 @@ import { PageShell, PageHeader } from "@/components/site/PageShell";
 export const Route = createFileRoute("/about/history")({
   head: () => ({
     meta: [
-      { title: "Company History — Aadya Pharmex Healthcare" },
+      { title: "Company History — Aadya Medicine Agencies" },
       { name: "description", content: "From a single-city distributor in 2003 to a pan-India pharmaceutical leader serving 400+ retailers." },
     ],
   }),
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/about/history")({
 });
 
 const milestones = [
-  { year: "2003", title: "Founded in Mumbai", desc: "Started as a regional distributor with 12 partner pharmacies." },
+  { year: "2003", title: "Founded in Saharanpur", desc: "Started as a regional distributor with 12 partner pharmacies." },
   { year: "2008", title: "Multi-state Expansion", desc: "Reached 4 states and crossed 1000 SKUs in our catalog." },
   { year: "2013", title: "WHO-GMP Certification", desc: "Became one of the first regional distributors with WHO-GMP accreditation." },
   { year: "2017", title: "Cold Chain Network", desc: "Launched temperature-controlled logistics for biologicals & vaccines." },
@@ -24,7 +24,7 @@ const milestones = [
 function HistoryPage() {
   return (
     <PageShell>
-      <PageHeader eyebrow="Our Journey" title="Two Decades of Growth" subtitle="Milestones that shaped Aadya Pharmex Healthcare." />
+      <PageHeader eyebrow="Our Journey" title="Two Decades of Growth" subtitle="Milestones that shaped Aadya Medicine Agencies." />
       <section className="py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="relative">
