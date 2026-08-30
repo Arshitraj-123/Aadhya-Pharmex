@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { Navbar } from "./Navbar";
 import { Footer } from "./Footer";
+import { NewProductBanner } from "./NewProductBanner";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="pt-16"
       >
+        <NewProductBanner />
         {children}
       </motion.main>
       <Footer />

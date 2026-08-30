@@ -51,9 +51,10 @@ function ProductsPage() {
           image: resolveProductImage(p.tradeName, tablet).image,
           mrp: p.mrp || 10,
           price: p.ptr || 8,
-          packing: p.sku || "10 Tabs",
+          packing: p.packing || p.sku || "10 Tabs",
           composition: p.genericName || "Standard",
-          description: p.genericName || "No description available"
+          description: p.description || p.genericName || "No description available",
+          isNewLaunch: Boolean(p.isNewLaunch)
         }));
         setLiveProducts(mapped);
       } catch (err) {

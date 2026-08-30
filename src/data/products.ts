@@ -22,6 +22,7 @@ export type Product = {
   packing: string;
   composition: string;
   description: string;
+  isNewLaunch?: boolean;
 };
 
 export const categories = [

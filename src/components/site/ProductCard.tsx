@@ -33,6 +33,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-accent/90 backdrop-blur text-accent-foreground text-[10px] font-bold uppercase tracking-wider">
             {Math.round(((product.mrp - product.price) / product.mrp) * 100)}% OFF
           </div>
+          {product.isNewLaunch && (
+            <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-emerald-600/95 backdrop-blur text-white text-[10px] font-extrabold uppercase tracking-wider shadow-md flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping" />
+              NEW LAUNCH
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-primary/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-smooth" />
         </div>
       </button>

@@ -30,7 +30,16 @@ export function Navbar() {
   const [open, setOpen] = useState<string | null>(null);
   const [mobile, setMobile] = useState(false);
   const { totalItems } = useCart();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, token } = useAuth();
+
+  const getAdminUrl = () => {
+    const adminBase = import.meta.env.VITE_ADMIN_URL || "http://localhost:5173/admin/";
+    if (token && user) {
+      const sep = adminBase.includes("?") ? "&" : "?";
+      return `${adminBase}${sep}token=${encodeURIComponent(token)}&user=${encodeURIComponent(JSON.stringify(user))}`;
+    }
+    return adminBase;
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -101,7 +110,7 @@ export function Navbar() {
               </span>
               {(user?.role === "Admin" || user?.role === "Super Admin") && (
                 <Button asChild variant="outline" size="sm">
-                  <a href="/admin/" className="flex items-center gap-1.5">
+                  <a href={getAdminUrl()} className="flex items-center gap-1.5">
                     <LayoutDashboard className="w-4 h-4" />
                     Admin Panel
                   </a>
@@ -163,7 +172,7 @@ export function Navbar() {
                   </span>
                   {(user?.role === "Admin" || user?.role === "Super Admin") && (
                     <Button asChild variant="outline" size="sm" className="w-full">
-                      <a href="/admin/" className="flex items-center justify-center gap-1.5">
+                      <a href={getAdminUrl()} className="flex items-center justify-center gap-1.5">
                         <LayoutDashboard className="w-4 h-4" />
                         Admin Panel
                       </a>
