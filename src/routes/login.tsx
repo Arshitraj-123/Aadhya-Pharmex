@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Mail, Lock, LogIn, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { Mail, Lock, LogIn, Eye, EyeOff, ShieldCheck, CheckCircle2, KeyRound, RefreshCw, ArrowLeft } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -10,11 +10,15 @@ import { useAuth } from "@/contexts/AuthContext";
 
 type LoginSearch = {
   redirect?: string;
+  registeredEmail?: string;
+  autoFill?: string;
 };
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): LoginSearch => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    registeredEmail: typeof search.registeredEmail === "string" ? search.registeredEmail : undefined,
+    autoFill: typeof search.autoFill === "string" ? search.autoFill : undefined,
   }),
   head: () => ({
     meta: [
@@ -62,6 +66,11 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [authStep, setAuthStep] = useState(1);
   const [otp, setOtp] = useState("");
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [resending, setResending] = useState(false);
+  const [autoFillNotice, setAutoFillNotice] = useState<string | null>(null);
+  const [verificationToken, setVerificationToken] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -75,6 +84,48 @@ function LoginPage() {
   const [linkLoading, setLinkLoading] = useState(false);
 
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  // Countdown timer for 2FA resend
+  useEffect(() => {
+    let timer: any;
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  // Auto-fill credentials after successful 2-step registration verification
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("autofill_login");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.email) {
+          setFormData({
+            email: parsed.email,
+            password: parsed.password || "",
+          });
+          if (parsed.verificationToken) {
+            setVerificationToken(parsed.verificationToken);
+          }
+          setAutoFillNotice(
+            parsed.isGoogle
+              ? `Account verified for ${parsed.email}. Click Continue with Google or enter your password to sign in.`
+              : `Registration verified! Your registered email and password are auto-filled below. Simply press Sign In to continue.`
+          );
+          toast.success("Account verified! Credentials auto-filled.");
+        }
+        sessionStorage.removeItem("autofill_login");
+      } else if (search?.registeredEmail) {
+        setFormData((prev) => ({ ...prev, email: search.registeredEmail! }));
+        setAutoFillNotice(`Account verified for ${search.registeredEmail}. Please enter your password and click Sign In.`);
+      }
+    } catch (e) {
+      console.error("Autofill retrieval error:", e);
+    }
+  }, [search?.registeredEmail]);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
@@ -105,6 +156,21 @@ function LoginPage() {
     try {
       setLoading(true);
       const res = await api.post("/auth/google", { credential: response.credential });
+      
+      // If retailer is non-registered and requires 2-step OTP verification:
+      if (res.data.requiresOtp) {
+        toast.info(res.data.message || "New retailer registration: 2-step verification code sent.");
+        navigate({
+          to: "/signup",
+          search: {
+            googleEmail: res.data.email,
+            verifyOtp: "true",
+            redirect: search?.redirect,
+          },
+        });
+        return;
+      }
+
       login(res.data.token, res.data.user);
       toast.success(res.data.message || "Login successful!");
       const target = getRedirectTarget();
@@ -161,12 +227,24 @@ function LoginPage() {
       }
       setLoading(true);
       try {
-        await api.post("/auth/login", {
+        const res = await api.post("/auth/login", {
           email: formData.email,
           password: formData.password,
+          verificationToken: verificationToken || undefined,
         });
-        toast.success("Credentials verified! Please enter the 2FA code.");
+
+        // Instant login if registration was just verified via verificationToken:
+        if (res.data.token) {
+          login(res.data.token, res.data.user);
+          toast.success(res.data.message || "Sign In successful! Welcome to Aadya Medicine Agencies.");
+          const target = getRedirectTarget();
+          navigate({ to: target as any });
+          return;
+        }
+
+        toast.success(res.data.message || "Credentials verified! 2FA verification code sent via Hostinger Business Email.");
         setAuthStep(2);
+        setResendCountdown(30);
       } catch (err: any) {
         toast.error(err.response?.data?.message || "Login failed");
       } finally {
@@ -195,6 +273,23 @@ function LoginPage() {
     }
   };
 
+  const handleResendLoginOtp = async () => {
+    if (resendCountdown > 0 || resending) return;
+    setResending(true);
+    try {
+      const res = await api.post("/auth/resend-otp", {
+        email: formData.email,
+        purpose: "login",
+      });
+      toast.success(res.data.message || "Fresh 2FA code sent via Hostinger Business Email!");
+      setResendCountdown(30);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to resend code");
+    } finally {
+      setResending(false);
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
@@ -211,6 +306,21 @@ function LoginPage() {
               <span className="font-bold">Cart Checkout:</span> Please sign in to complete your order and proceed with checkout.
             </div>
           )}
+
+          {autoFillNotice && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-emerald-900 dark:text-emerald-200 text-sm font-medium shadow-sm flex items-start gap-3"
+            >
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-bold text-emerald-950 dark:text-emerald-100">Account Verified Successfully!</p>
+                <p className="text-xs text-emerald-800 dark:text-emerald-300 mt-0.5 leading-relaxed">{autoFillNotice}</p>
+              </div>
+            </motion.div>
+          )}
+
           <motion.form
             initial="hidden"
             animate="visible"
@@ -356,13 +466,18 @@ function LoginPage() {
                   transition={{ delay: 0.1 }}
                   className="relative text-center"
                 >
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm ring-8 ring-primary/5">
                     <ShieldCheck className="h-7 w-7" />
                   </div>
-                  <h2 className="text-xl font-bold text-foreground mb-2">Two-Factor Authentication</h2>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Enter the 4-digit code sent to your registered credentials.
+                  <h2 className="text-xl font-bold text-foreground mb-1">Two-Factor Authentication</h2>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Enter the 4-digit code sent to:
+                    <br />
+                    <strong className="text-foreground font-semibold">{formData.email}</strong>
                   </p>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mb-6 border border-emerald-500/20">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Hostinger Business Email Secured
+                  </div>
                   
                   <div className="relative max-w-[200px] mx-auto">
                     <input
@@ -371,7 +486,8 @@ function LoginPage() {
                       value={otp}
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                       placeholder="••••"
-                      className="w-full text-center tracking-[0.75em] text-2xl font-bold h-14 rounded-xl bg-secondary border border-border focus:border-primary outline-none transition-smooth text-foreground"
+                      className="w-full text-center tracking-[0.75em] text-2xl font-bold h-14 rounded-xl bg-secondary border border-border focus:border-primary outline-none transition-smooth text-foreground shadow-inner"
+                      autoFocus
                     />
                   </div>
                 </motion.div>
@@ -381,25 +497,38 @@ function LoginPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
-                  className="pt-4"
+                  className="pt-2 space-y-3"
                 >
                   <Button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || otp.length !== 4}
                     variant="hero"
                     size="lg"
-                    className="w-full"
+                    className="w-full flex items-center justify-center gap-2"
                   >
+                    <KeyRound className="w-4 h-4" />
                     {loading ? "Verifying..." : "Verify & Continue"}
                   </Button>
                   
-                  <button
-                    type="button"
-                    onClick={() => setAuthStep(1)}
-                    className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground transition-smooth"
-                  >
-                    Back to email
-                  </button>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
+                    <button
+                      type="button"
+                      onClick={handleResendLoginOtp}
+                      disabled={resendCountdown > 0 || resending}
+                      className="text-primary font-semibold hover:underline disabled:opacity-50 inline-flex items-center gap-1"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${resending ? "animate-spin" : ""}`} />
+                      {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend 2FA Code"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setAuthStep(1)}
+                      className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
+                    </button>
+                  </div>
                 </motion.div>
               </>
             )}

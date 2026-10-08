@@ -12,6 +12,10 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  KeyRound,
+  ArrowLeft,
+  RefreshCw,
+  CheckCircle2,
 } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
@@ -39,11 +43,15 @@ function loadGoogleScript(): Promise<void> {
 
 type SignupSearch = {
   redirect?: string;
+  googleEmail?: string;
+  verifyOtp?: string;
 };
 
 export const Route = createFileRoute("/signup")({
   validateSearch: (search: Record<string, unknown>): SignupSearch => ({
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+    googleEmail: typeof search.googleEmail === "string" ? search.googleEmail : undefined,
+    verifyOtp: typeof search.verifyOtp === "string" ? search.verifyOtp : undefined,
   }),
   head: () => ({
     meta: [
@@ -72,6 +80,16 @@ function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  
+  // ── 2-Step Verification State ──────────────────────────────────────────
+  const [signupStep, setSignupStep] = useState<1 | 2>(1);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otpValue, setOtpValue] = useState("");
+  const [isGoogleSignup, setIsGoogleSignup] = useState(false);
+  const [savedPassword, setSavedPassword] = useState("");
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [resending, setResending] = useState(false);
+
   const [formData, setFormData] = useState({
     fullName: "",
     storeName: "",
@@ -91,6 +109,27 @@ function SignupPage() {
   const [linkLoading, setLinkLoading] = useState(false);
 
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    let timer: any;
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  // Check if navigating directly to OTP verification (e.g. from Google login)
+  useEffect(() => {
+    if (search?.verifyOtp === "true" && search?.googleEmail) {
+      setSignupStep(2);
+      setOtpEmail(search.googleEmail);
+      setIsGoogleSignup(true);
+      setResendCountdown(30);
+    }
+  }, [search]);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
@@ -120,8 +159,20 @@ function SignupPage() {
     try {
       setLoading(true);
       const res = await api.post("/auth/google", { credential: response.credential });
+      
+      // If backend requires 2-step verification for new retailer:
+      if (res.data.requiresOtp) {
+        setSignupStep(2);
+        setOtpEmail(res.data.email);
+        setIsGoogleSignup(true);
+        setResendCountdown(30);
+        toast.info(res.data.message || "2-Step verification code sent via Hostinger Business Email!");
+        return;
+      }
+
+      // Existing user: direct login
       login(res.data.token, res.data.user);
-      toast.success(res.data.message || "Account created with Google!");
+      toast.success(res.data.message || "Account connected with Google!");
       const target = getRedirectTarget();
       navigate({ to: target as any });
     } catch (err: any) {
@@ -169,6 +220,7 @@ function SignupPage() {
     }
   };
 
+  // Step 1 Submission: Initiate registration & send 2-step OTP
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (
@@ -194,33 +246,88 @@ function SignupPage() {
 
     setLoading(true);
     try {
-      await api.post("/auth/register", {
+      const res = await api.post("/auth/register", {
         fullName: formData.fullName,
         storeName: formData.storeName,
         email: formData.email,
         password: formData.password,
+        phone: formData.phone,
         role: "Retailer",
         city: formData.city
       });
-      toast.success("Signup successful! Welcome to Aadya Medicine Agencies.");
-      setFormData({
-        fullName: "",
-        storeName: "",
-        email: "",
-        phone: "",
-        city: "",
-        password: "",
-        confirmPassword: "",
-        agreeTerms: false,
-      });
-      navigate({
-        to: "/login",
-        search: search?.redirect ? { redirect: search.redirect } : undefined,
-      });
+      
+      // Advance to 2-step verification step
+      setSignupStep(2);
+      setOtpEmail(formData.email.toLowerCase().trim());
+      setSavedPassword(formData.password);
+      setIsGoogleSignup(false);
+      setResendCountdown(30);
+      toast.success(res.data.message || "2-Step verification code sent via Hostinger Business Email!");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Step 2 Submission: Verify registration OTP & redirect to Sign In with auto-filled credentials
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpValue || otpValue.trim().length !== 4) {
+      toast.error("Please enter the 4-digit verification code");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.post("/auth/register-verify", {
+        email: otpEmail,
+        otp: otpValue.trim(),
+      });
+
+      toast.success("Account verified successfully! Redirecting to Sign In...");
+
+      // Store credentials in sessionStorage so the login page automatically auto-fills them
+      const autofillPayload = {
+        email: otpEmail,
+        password: isGoogleSignup ? "" : savedPassword,
+        verificationToken: res.data.verificationToken,
+        isGoogle: isGoogleSignup,
+      };
+      sessionStorage.setItem("autofill_login", JSON.stringify(autofillPayload));
+
+      setTimeout(() => {
+        navigate({
+          to: "/login",
+          search: {
+            registeredEmail: otpEmail,
+            autoFill: "true",
+            redirect: search?.redirect,
+          },
+        });
+      }, 500);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Invalid or expired verification code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend OTP via Hostinger SMTP
+  const handleResendOtp = async () => {
+    if (resendCountdown > 0 || resending) return;
+    setResending(true);
+    try {
+      const res = await api.post("/auth/resend-otp", {
+        email: otpEmail,
+        purpose: "signup",
+      });
+      toast.success(res.data.message || "New verification code sent via Hostinger Business Email!");
+      setResendCountdown(30);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to resend code");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -239,15 +346,94 @@ function SignupPage() {
 
       <section className="py-16">
         <div className="container mx-auto px-4 max-w-2xl">
-          <motion.form
-            initial="hidden"
-            animate="visible"
-            variants={containerVariants}
-            onSubmit={onSubmit}
-            className="space-y-5"
-          >
-            {/* Personal Information */}
-            <div className="p-6 rounded-2xl bg-card border border-border/50 shadow-sm space-y-4">
+          {signupStep === 2 ? (
+            /* ── STEP 2: TWO-STEP OTP VERIFICATION CARD ──────────────────── */
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-8 rounded-3xl bg-card border border-border/80 shadow-elegant space-y-6 max-w-lg mx-auto"
+            >
+              <div className="text-center space-y-2">
+                <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4 ring-8 ring-primary/5">
+                  <ShieldCheck className="w-8 h-8 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">Two-Step Verification</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed px-2">
+                  To complete your retailer registration, enter the 4-digit verification code sent to:
+                  <br />
+                  <strong className="text-foreground font-semibold text-base mt-1 inline-block">{otpEmail}</strong>
+                </p>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mt-2 border border-emerald-500/20">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Hostinger Business Email Secured
+                </div>
+              </div>
+
+              <form onSubmit={handleVerifyOtp} className="space-y-6 pt-2">
+                <div className="space-y-2 text-center">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+                    Enter 4-Digit OTP Code
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={otpValue}
+                    onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
+                    placeholder="••••"
+                    autoFocus
+                    className="w-52 mx-auto text-center tracking-[1em] text-3xl font-mono h-16 rounded-2xl bg-secondary border-2 border-primary/40 focus:border-primary outline-none text-foreground font-extrabold shadow-inner transition-smooth"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Code expires in 10 minutes
+                  </p>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loading || otpValue.length !== 4}
+                  variant="hero"
+                  size="lg"
+                  className="w-full h-12 text-base font-semibold shadow-md flex items-center justify-center gap-2"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  {loading ? "Verifying Code..." : "Verify & Activate Account"}
+                </Button>
+              </form>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-5 border-t border-border text-xs text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={handleResendOtp}
+                  disabled={resendCountdown > 0 || resending}
+                  className="text-primary font-semibold hover:underline disabled:opacity-50 inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${resending ? "animate-spin" : ""}`} />
+                  {resendCountdown > 0 ? `Resend code in ${resendCountdown}s` : "Resend Verification Code"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSignupStep(1);
+                    setOtpValue("");
+                  }}
+                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back to Edit Details
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            /* ── STEP 1: REGISTRATION DETAILS FORM ──────────────────────── */
+            <motion.form
+              initial="hidden"
+              animate="visible"
+              variants={containerVariants}
+              onSubmit={onSubmit}
+              className="space-y-5"
+            >
+              {/* Personal Information */}
+              <div className="p-6 rounded-2xl bg-card border border-border/50 shadow-sm space-y-4">
               <h3 className="font-semibold text-foreground">Personal Information</h3>
 
               <motion.div
@@ -545,6 +731,7 @@ function SignupPage() {
               </Link>
             </motion.div>
           </motion.form>
+          )}
 
           {/* Account Linking Dialog */}
           {showLinkDialog && (
