@@ -7,7 +7,7 @@ export const Route = createFileRoute("/admin")({
 
 function AdminRedirect() {
   useEffect(() => {
-    const adminBase = import.meta.env.VITE_ADMIN_URL || "http://localhost:5173/admin/";
+    const adminBase = import.meta.env.VITE_ADMIN_URL || "/admin/";
     const token = localStorage.getItem("auth_token");
     const user = localStorage.getItem("auth_user");
     let target = adminBase;

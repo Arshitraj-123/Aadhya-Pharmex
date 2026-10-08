@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageShell, PageHeader } from "@/components/site/PageShell";
 import { ProductCard } from "@/components/site/ProductCard";
 import { categories } from "@/data/products";
@@ -66,18 +66,38 @@ function ProductsPage() {
     fetchProducts();
   }, []);
 
+  const [onlyNew, setOnlyNew] = useState(false);
+
+  const catCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    liveProducts.forEach((p) => {
+      if (p.category) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [liveProducts]);
+
   const filtered = useMemo(() => {
     return liveProducts.filter((p) => {
+      if (onlyNew && !p.isNewLaunch) return false;
       if (search.category && p.category !== search.category) return false;
       if (query && !p.name.toLowerCase().includes(query.toLowerCase())) return false;
       if (p.price > maxPrice) return false;
       return true;
     });
-  }, [liveProducts, search.category, query, maxPrice]);
+  }, [liveProducts, onlyNew, search.category, query, maxPrice]);
 
   const page = search.page ?? 1;
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const paged = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (page <= 4) return [1, 2, 3, 4, 5, "...", totalPages];
+    if (page >= totalPages - 3) return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, "...", page - 1, page, page + 1, "...", totalPages];
+  };
 
   return (
     <PageShell>
@@ -104,21 +124,29 @@ function ProductsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Categories</label>
-                  <div className="mt-3 space-y-1">
+                  <div className="mt-3 space-y-1 max-h-[480px] overflow-y-auto pr-1">
                     <button
                       onClick={() => navigate({ search: { category: undefined, page: 1 } })}
-                      className={`block w-full text-left px-3 py-2 rounded-lg text-sm transition-smooth ${!search.category ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
-                    >All Categories</button>
-                    {categories.map((c) => (
-                      <button
-                        key={c.slug}
-                        onClick={() => navigate({ search: { category: c.slug, page: 1 } })}
-                        className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-lg text-sm transition-smooth ${search.category === c.slug ? "bg-primary text-primary-foreground" : "hover:bg-secondary"}`}
-                      >
-                        <span>{c.name}</span>
-                        <span className="text-xs opacity-70">{c.count}</span>
-                      </button>
-                    ))}
+                      className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-lg text-sm transition-smooth ${!search.category ? "bg-primary text-primary-foreground font-semibold" : "hover:bg-secondary text-foreground/80"}`}
+                    >
+                      <span>All Categories</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-background/20 font-semibold">{liveProducts.length}</span>
+                    </button>
+                    {categories.map((c) => {
+                      const count = catCounts[c.slug] ?? c.count ?? 0;
+                      return (
+                        <button
+                          key={c.slug}
+                          onClick={() => navigate({ search: { category: c.slug, page: 1 } })}
+                          className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-lg text-sm transition-smooth ${search.category === c.slug ? "bg-primary text-primary-foreground font-semibold" : "hover:bg-secondary text-foreground/80"}`}
+                        >
+                          <span className="truncate pr-2">{c.name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${search.category === c.slug ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"}`}>
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="mt-6">
@@ -142,10 +170,24 @@ function ProductsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
                     <p className="text-sm text-muted-foreground">
                       Showing <span className="font-semibold text-foreground">{paged.length}</span> of {filtered.length} products
                     </p>
+                    <button
+                      onClick={() => setOnlyNew(!onlyNew)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                        onlyNew
+                          ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
+                          : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border"
+                      }`}
+                    >
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                      </span>
+                      ✨ Newly Added Products ({liveProducts.filter(p => p.isNewLaunch).length})
+                    </button>
                   </div>
                   {paged.length === 0 ? (
                     <div className="py-20 text-center text-muted-foreground">No products found. Try adjusting your filters.</div>
@@ -158,16 +200,52 @@ function ProductsPage() {
                   )}
 
                   {totalPages > 1 && (
-                    <div className="flex justify-center gap-2 mt-12">
-                      {Array.from({ length: totalPages }).map((_, i) => {
-                        const n = i + 1;
+                    <div className="flex items-center justify-center gap-2 mt-12 flex-wrap">
+                      {/* Prev Button */}
+                      <button
+                        disabled={page <= 1}
+                        onClick={() => navigate({ search: { ...search, page: Math.max(1, page - 1) } })}
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-smooth bg-card border border-border hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label="Previous Page"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+
+                      {/* Numbered Buttons */}
+                      {getPageNumbers().map((num, i) => {
+                        if (num === "...") {
+                          return (
+                            <span key={`dots-${i}`} className="w-10 h-10 flex items-center justify-center text-sm text-muted-foreground">
+                              ...
+                            </span>
+                          );
+                        }
+                        const n = num as number;
                         return (
-                          <Link key={n} to="/products" search={{ ...search, page: n }}
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-smooth ${n === page ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-card border border-border hover:border-primary"}`}>
+                          <Link
+                            key={n}
+                            to="/products"
+                            search={{ ...search, page: n }}
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-smooth ${
+                              n === page
+                                ? "bg-gradient-primary text-primary-foreground shadow-glow"
+                                : "bg-card border border-border hover:border-primary"
+                            }`}
+                          >
                             {n}
                           </Link>
                         );
                       })}
+
+                      {/* Next Button */}
+                      <button
+                        disabled={page >= totalPages}
+                        onClick={() => navigate({ search: { ...search, page: Math.min(totalPages, page + 1) } })}
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-smooth bg-card border border-border hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed"
+                        aria-label="Next Page"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </>

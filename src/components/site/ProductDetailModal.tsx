@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, MessageCircle, Mail, ShieldCheck, Truck, Award, ChevronRight, Minus, Plus } from "lucide-react";
+import { X, MessageCircle, Mail, ShieldCheck, Truck, Award, ChevronRight, Minus, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { whatsappLink } from "@/lib/whatsapp";
 import { products, type Product } from "@/data/products";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 type Props = {
   product: Product | null;
@@ -18,7 +20,20 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
   const [zoom, setZoom] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const { addItem, getItemQuantity, updateQuantity } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const quantity = getItemQuantity(product?.id ?? "");
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addItem(product);
+    toast.success(`Added ${product.name} to cart`);
+  };
+
+  const handleUpdateQuantity = (newQty: number) => {
+    if (!product) return;
+    updateQuantity(product.id, newQty);
+  };
 
   useEffect(() => {
     setActiveImg(0);
@@ -149,17 +164,17 @@ export function ProductDetailModal({ product, open, onClose }: Props) {
                 <div className="mt-6">
                   {quantity > 0 ? (
                     <div className="flex w-fit items-center gap-2 rounded-full border border-border bg-background/80 p-1">
-                      <Button size="sm" variant="ghost" className="h-9 w-9 rounded-full" onClick={() => updateQuantity(product.id, quantity - 1)}>
+                      <Button size="sm" variant="ghost" className="h-9 w-9 rounded-full" onClick={() => handleUpdateQuantity(quantity - 1)}>
                         <Minus className="w-4 h-4" />
                       </Button>
                       <span className="min-w-8 text-center text-sm font-semibold">{quantity}</span>
-                      <Button size="sm" variant="ghost" className="h-9 w-9 rounded-full" onClick={() => updateQuantity(product.id, quantity + 1)}>
+                      <Button size="sm" variant="ghost" className="h-9 w-9 rounded-full" onClick={() => handleUpdateQuantity(quantity + 1)}>
                         <Plus className="w-4 h-4" />
                       </Button>
                     </div>
                   ) : (
-                    <Button size="lg" className="w-full sm:w-auto" onClick={() => addItem(product)}>
-                      Add to Cart
+                    <Button size="lg" className="w-full sm:w-auto bg-[#1B3A6B] hover:bg-[#152e55] text-white" onClick={handleAddToCart}>
+                      <ShoppingCart className="w-4 h-4 mr-2" /> Add to Cart
                     </Button>
                   )}
                 </div>

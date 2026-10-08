@@ -1,16 +1,26 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, MessageCircle, Minus, Plus } from "lucide-react";
+import { Eye, MessageCircle, Minus, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { whatsappLink } from "@/lib/whatsapp";
 import type { Product } from "@/data/products";
 import { ProductDetailModal } from "@/components/site/ProductDetailModal";
 import { useCart } from "@/hooks/useCart";
+import { toast } from "sonner";
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const [open, setOpen] = useState(false);
   const { addItem, getItemQuantity, updateQuantity } = useCart();
   const quantity = getItemQuantity(product.id);
+
+  const handleAddToCart = () => {
+    addItem(product);
+    toast.success(`Added ${product.name} to cart`);
+  };
+
+  const handleUpdateQuantity = (newQty: number) => {
+    updateQuantity(product.id, newQty);
+  };
 
   return (
     <>
@@ -54,17 +64,17 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         <div className="mt-4">
           {quantity > 0 ? (
             <div className="flex items-center justify-between rounded-full border border-border bg-background/80 p-1">
-              <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => updateQuantity(product.id, quantity - 1)}>
+              <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => handleUpdateQuantity(quantity - 1)}>
                 <Minus className="w-3.5 h-3.5" />
               </Button>
               <span className="min-w-8 text-center text-sm font-semibold">{quantity}</span>
-              <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => updateQuantity(product.id, quantity + 1)}>
+              <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full" onClick={() => handleUpdateQuantity(quantity + 1)}>
                 <Plus className="w-3.5 h-3.5" />
               </Button>
             </div>
           ) : (
-            <Button size="sm" className="w-full" onClick={() => addItem(product)}>
-              Add to Cart
+            <Button size="sm" className="w-full bg-[#1B3A6B] hover:bg-[#152e55] text-white" onClick={handleAddToCart}>
+              <ShoppingCart className="w-3.5 h-3.5 mr-1" /> Add to Cart
             </Button>
           )}
         </div>

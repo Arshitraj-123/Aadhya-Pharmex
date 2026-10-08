@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Search, Menu, ShoppingCart, X, LogOut, LayoutDashboard } from "lucide-react";
+import { ChevronDown, Search, Menu, ShoppingCart, X, LogOut, LayoutDashboard, User, Package, MapPin, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/site/BrandLogo";
@@ -29,11 +29,13 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const [mobile, setMobile] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
   const { totalItems } = useCart();
   const { user, isAuthenticated, logout, token } = useAuth();
 
   const getAdminUrl = () => {
-    const adminBase = import.meta.env.VITE_ADMIN_URL || "http://localhost:5173/admin/";
+    const adminBase = import.meta.env.VITE_ADMIN_URL || "/admin/";
     if (token && user) {
       const sep = adminBase.includes("?") ? "&" : "?";
       return `${adminBase}${sep}token=${encodeURIComponent(token)}&user=${encodeURIComponent(JSON.stringify(user))}`;
@@ -47,6 +49,19 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close account dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const userInitial = user?.fullName?.charAt(0)?.toUpperCase() || "U";
 
   return (
     <motion.header
@@ -98,28 +113,126 @@ export function Navbar() {
           >
             <ShoppingCart className="w-4 h-4" />
             {totalItems > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-accent-foreground">
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#1B3A6B] text-white px-1 text-[10px] font-bold shadow-md ring-1 ring-white/70">
                 {totalItems}
               </span>
             )}
           </Link>
           {isAuthenticated ? (
-            <div className="hidden md:flex items-center gap-3">
-              <span className={cn("text-xs font-semibold px-2.5 py-1 rounded bg-secondary", scrolled ? "text-foreground" : "text-white bg-white/10")}>
-                Hi, {user?.fullName.split(" ")[0]}
-              </span>
-              {(user?.role === "Admin" || user?.role === "Super Admin") && (
-                <Button asChild variant="outline" size="sm">
-                  <a href={getAdminUrl()} className="flex items-center gap-1.5">
-                    <LayoutDashboard className="w-4 h-4" />
-                    Admin Panel
-                  </a>
-                </Button>
-              )}
-              <Button onClick={logout} variant="hero" size="sm" className="flex items-center gap-1.5">
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </Button>
+            <div className="hidden md:block relative" ref={accountRef}>
+              <button
+                onClick={() => setAccountOpen(!accountOpen)}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-full transition-smooth",
+                  scrolled ? "hover:bg-secondary text-foreground" : "hover:bg-white/15 text-white"
+                )}
+              >
+                {user?.profilePhoto ? (
+                  <img src={user.profilePhoto} alt={user.fullName} className="w-8 h-8 rounded-full object-cover ring-2 ring-primary/30" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold shadow-md">
+                    {userInitial}
+                  </div>
+                )}
+                <span className={cn("text-xs font-semibold max-w-[80px] truncate", scrolled ? "" : "text-white")}>
+                  {user?.fullName?.split(" ")[0]}
+                </span>
+                <ChevronDown className={cn("w-3 h-3 transition-transform", accountOpen && "rotate-180")} />
+              </button>
+
+              <AnimatePresence>
+                {accountOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/60 shadow-elegant overflow-hidden z-50"
+                  >
+                    {/* User info header */}
+                    <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 border-b border-border/50">
+                      <div className="flex items-center gap-3">
+                        {user?.profilePhoto ? (
+                          <img src={user.profilePhoto} alt="" className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/20" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-base font-bold">
+                            {userInitial}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-sm text-foreground truncate">{user?.fullName}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{user?.email}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu items */}
+                    <div className="py-1.5">
+                      <Link
+                        to="/account"
+                        search={{ tab: "profile" }}
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-primary/5 hover:text-primary transition-smooth"
+                      >
+                        <User className="w-4 h-4" />
+                        My Profile
+                      </Link>
+                      <Link
+                        to="/account"
+                        search={{ tab: "orders" }}
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-primary/5 hover:text-primary transition-smooth"
+                      >
+                        <Package className="w-4 h-4" />
+                        My Orders
+                      </Link>
+                      <Link
+                        to="/account"
+                        search={{ tab: "tracking" }}
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-primary/5 hover:text-primary transition-smooth"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        Order Tracking
+                      </Link>
+                      <Link
+                        to="/account"
+                        search={{ tab: "security" }}
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-primary/5 hover:text-primary transition-smooth"
+                      >
+                        <ShieldCheck className="w-4 h-4" />
+                        Security
+                      </Link>
+
+                      {(user?.role === "Admin" || user?.role === "Super Admin") && (
+                        <>
+                          <div className="mx-3 my-1 border-t border-border/50" />
+                          <a
+                            href={getAdminUrl()}
+                            onClick={() => setAccountOpen(false)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-primary/5 hover:text-primary transition-smooth"
+                          >
+                            <LayoutDashboard className="w-4 h-4" />
+                            Admin Panel
+                          </a>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Sign out */}
+                    <div className="border-t border-border/50 p-2">
+                      <button
+                        onClick={() => { logout(); setAccountOpen(false); }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-smooth"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
             <div className="hidden md:flex items-center gap-2">
@@ -165,11 +278,32 @@ export function Navbar() {
                   {it.label}
                 </Link>
               ))}
+              <Link
+                to="/cart"
+                onClick={() => setMobile(false)}
+                className="px-4 py-3 rounded-lg hover:bg-primary/10 font-medium flex items-center justify-between"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4 text-[#1B3A6B]" />
+                  My Cart
+                </span>
+                {totalItems > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#1B3A6B] text-white px-2 text-xs font-bold shadow-sm">
+                    {totalItems}
+                  </span>
+                )}
+              </Link>
               {isAuthenticated ? (
                 <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border">
                   <span className="px-4 py-2 text-sm font-semibold text-muted-foreground">
                     Logged in as: {user?.fullName} ({user?.role})
                   </span>
+                  <Link to="/account" search={{ tab: "profile" }} onClick={() => setMobile(false)} className="px-4 py-3 rounded-lg hover:bg-primary/10 font-medium flex items-center gap-2">
+                    <User className="w-4 h-4" /> My Profile
+                  </Link>
+                  <Link to="/account" search={{ tab: "orders" }} onClick={() => setMobile(false)} className="px-4 py-3 rounded-lg hover:bg-primary/10 font-medium flex items-center gap-2">
+                    <Package className="w-4 h-4" /> My Orders
+                  </Link>
                   {(user?.role === "Admin" || user?.role === "Super Admin") && (
                     <Button asChild variant="outline" size="sm" className="w-full">
                       <a href={getAdminUrl()} className="flex items-center justify-center gap-1.5">

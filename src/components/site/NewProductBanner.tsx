@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -11,11 +11,16 @@ import {
   ShieldCheck,
   Package,
   Bell,
-  Check
+  Check,
+  Clock,
+  Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { resolveProductImage } from "@/data/productImages";
 import { useCart } from "@/hooks/useCart";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { whatsappLink } from "@/lib/whatsapp";
 import { ProductDetailModal } from "@/components/site/ProductDetailModal";
 import type { Product } from "@/data/products";
@@ -54,24 +59,61 @@ export type AnnouncementProduct = {
   company?: string;
   imageUrl?: string;
   announcedAt?: string;
+  createdAt?: string;
 };
 
+// Helper: Format countdown time remaining
+function formatTimeRemaining(ms: number): string {
+  if (ms <= 0) return "Expiring now";
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const days = Math.floor(hours / 24);
+  const remHours = hours % 24;
+
+  if (days > 0) {
+    return `${days}d ${remHours}h left`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m left`;
+  }
+  return `${minutes}m left`;
+}
+
 export function NewProductBanner() {
-  const [announcements, setAnnouncements] = useState<AnnouncementProduct[]>([]);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { addItem } = useCart();
+
+  const [rawAnnouncements, setRawAnnouncements] = useState<AnnouncementProduct[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [isPaused, setIsPaused] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [addedSuccess, setAddedSuccess] = useState(false);
+  const [now, setNow] = useState(Date.now());
 
-  const { addItem } = useCart();
+  // Timer applied on banner:
+  // - 2 days (48 hours) for not-registered retailer user (guest)
+  // - 1 day (24 hours) for registered retailer user
+  const maxDurationHours = isAuthenticated ? 24 : 48;
+  const maxDurationMs = maxDurationHours * 60 * 60 * 1000;
+
+  // Real-time tick every 30 seconds to recalculate remaining time and auto-expire items
+  useEffect(() => {
+    const tick = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(tick);
+  }, []);
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await api.get("/products/announcements");
+      const userType = isAuthenticated ? "registered" : "guest";
+      const res = await api.get(`/products/announcements?userType=${userType}`);
       if (res.data?.announcements && Array.isArray(res.data.announcements)) {
-        setAnnouncements(res.data.announcements);
+        setRawAnnouncements(res.data.announcements);
       }
     } catch (err) {
       console.warn("Could not fetch announcements from API:", err);
@@ -89,10 +131,40 @@ export function NewProductBanner() {
       setIsDismissed(true);
     }
 
-    // Refresh every 45 seconds for new additions
-    const interval = setInterval(fetchAnnouncements, 45000);
+    // Refresh every 30 seconds for live new product additions from admin
+    const interval = setInterval(fetchAnnouncements, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
+
+  // Client-side strict timer filter:
+  // Discard products older than 2 days (guests) or 1 day (registered)
+  const activeAnnouncements = useMemo(() => {
+    return rawAnnouncements.filter((p) => {
+      const timestamp = new Date(p.announcedAt || p.createdAt || 0).getTime();
+      if (!timestamp) return true; // fallback if missing
+      const age = now - timestamp;
+      return age >= 0 && age <= maxDurationMs;
+    });
+  }, [rawAnnouncements, now, maxDurationMs]);
+
+  // Slide banner automatic advance (every 5 seconds)
+  useEffect(() => {
+    if (activeAnnouncements.length <= 1 || isPaused) return;
+
+    const timer = setInterval(() => {
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % activeAnnouncements.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [activeAnnouncements.length, isPaused]);
+
+  // Keep index within bounds if active announcements count changes
+  useEffect(() => {
+    if (currentIndex >= activeAnnouncements.length && activeAnnouncements.length > 0) {
+      setCurrentIndex(0);
+    }
+  }, [activeAnnouncements.length, currentIndex]);
 
   const handleDismiss = () => {
     setIsDismissed(true);
@@ -104,14 +176,20 @@ export function NewProductBanner() {
     sessionStorage.removeItem("announcement_banner_dismissed");
   };
 
-  if (loading || announcements.length === 0) {
+  // If loading or no active announcements within the 1-day/2-day timer window, hide banner completely
+  if (loading || activeAnnouncements.length === 0) {
     return null;
   }
 
-  const current = announcements[currentIndex] || announcements[0];
+  const current = activeAnnouncements[currentIndex] || activeAnnouncements[0];
   const categoryName = (current.category || "General").replace(/-/g, " ").toUpperCase();
   const fallbackImg = getCategoryFallback(current.category);
   const resolvedImg = resolveProductImage(current.tradeName || current.name, fallbackImg).image;
+
+  // Calculate remaining timer for the current active product
+  const productTimestamp = new Date(current.announcedAt || current.createdAt || 0).getTime();
+  const productRemainingMs = productTimestamp ? Math.max(0, maxDurationMs - (now - productTimestamp)) : maxDurationMs;
+  const timeRemainingStr = formatTimeRemaining(productRemainingMs);
 
   // Adapt to Product format for Cart and Detail Modal
   const productForCart: Product = {
@@ -130,6 +208,7 @@ export function NewProductBanner() {
   const handleAddToCart = () => {
     addItem(productForCart);
     setAddedSuccess(true);
+    toast.success(`Added ${productForCart.name} to cart`);
     setTimeout(() => setAddedSuccess(false), 2000);
   };
 
@@ -139,12 +218,23 @@ export function NewProductBanner() {
   };
 
   const nextAnnouncement = () => {
-    setCurrentIndex((prev) => (prev + 1) % announcements.length);
+    setDirection(1);
+    setCurrentIndex((prev) => (prev + 1) % activeAnnouncements.length);
   };
 
   const prevAnnouncement = () => {
-    setCurrentIndex((prev) => (prev - 1 + announcements.length) % announcements.length);
+    setDirection(-1);
+    setCurrentIndex((prev) => (prev - 1 + activeAnnouncements.length) % activeAnnouncements.length);
   };
+
+  const goToSlide = (index: number) => {
+    setDirection(index > currentIndex ? 1 : -1);
+    setCurrentIndex(index);
+  };
+
+  // Title: "NEWLY ADDED PRODUCTS" (plural) when > 1 product, or "NEWLY ADDED PRODUCT" (singular)
+  const isMultiple = activeAnnouncements.length > 1;
+  const bannerTitle = isMultiple ? "NEWLY ADDED PRODUCTS" : "NEWLY ADDED PRODUCT";
 
   return (
     <>
@@ -156,6 +246,8 @@ export function NewProductBanner() {
             exit={{ opacity: 0, y: -20, height: 0 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
             className="w-full relative z-40 bg-gradient-to-r from-slate-950 via-[#072417] to-slate-950 text-white border-b border-emerald-500/30 shadow-xl overflow-hidden"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
           >
             {/* Ambient Background Glow Effect */}
             <div className="absolute inset-0 pointer-events-none opacity-40">
@@ -167,37 +259,50 @@ export function NewProductBanner() {
               {/* Header Badge Row */}
               <div className="flex items-center justify-between gap-2 mb-2 sm:mb-2.5">
                 <div className="flex items-center gap-2 flex-wrap">
+                  {/* Title of Newly Added Product */}
                   <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] sm:text-xs font-bold tracking-wider uppercase bg-emerald-500/25 text-emerald-300 border border-emerald-400/40 shadow-[0_0_10px_rgba(16,185,129,0.25)]">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
                     </span>
-                    ✨ NEW PRODUCT IS ADDED IN OUR CATEGORY: {categoryName}
+                    ✨ {bannerTitle}: {categoryName}
                   </span>
 
-                  {announcements.length > 1 && (
-                    <span className="text-[11px] text-emerald-300/70 hidden sm:inline-block">
-                      ({currentIndex + 1} of {announcements.length} new updates)
+                  {/* Active Timer Pill */}
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-white/10 text-emerald-200 border border-white/10 backdrop-blur-sm">
+                    <Clock className="w-3 h-3 text-emerald-400" />
+                    <span>Banner Timer: <strong className="text-white">{timeRemainingStr}</strong></span>
+                    <span className="opacity-60 hidden md:inline">({isAuthenticated ? "24h Registered Window" : "48h Guest Window"})</span>
+                  </span>
+
+                  {/* Slideshow Progress Counter */}
+                  {isMultiple && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">
+                      <Layers className="w-3 h-3" />
+                      Slide {currentIndex + 1} of {activeAnnouncements.length}
                     </span>
                   )}
                 </div>
 
+                {/* Right controls: Prev / Next / Dismiss */}
                 <div className="flex items-center gap-1.5">
-                  {announcements.length > 1 && (
+                  {isMultiple && (
                     <div className="flex items-center gap-1 mr-1">
                       <button
                         onClick={prevAnnouncement}
                         aria-label="Previous update"
-                        className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+                        title="Previous Product"
+                        className="w-7 h-7 rounded-full bg-white/10 hover:bg-emerald-600/40 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
                       >
-                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <ChevronLeft className="w-4 h-4" />
                       </button>
                       <button
                         onClick={nextAnnouncement}
                         aria-label="Next update"
-                        className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+                        title="Next Product"
+                        className="w-7 h-7 rounded-full bg-white/10 hover:bg-emerald-600/40 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
                       >
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="w-4 h-4" />
                       </button>
                     </div>
                   )}
@@ -205,6 +310,7 @@ export function NewProductBanner() {
                   <button
                     onClick={handleDismiss}
                     aria-label="Dismiss banner"
+                    title="Dismiss Banner"
                     className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
                   >
                     <X className="w-4 h-4" />
@@ -212,122 +318,156 @@ export function NewProductBanner() {
                 </div>
               </div>
 
-              {/* Main Product Showcase Card */}
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white/5 backdrop-blur-md rounded-xl p-3 sm:p-4 border border-white/10">
-                {/* Left: Thumbnail & Details */}
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                  <div
-                    onClick={handleOpenDetails}
-                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-white/95 p-1.5 flex-shrink-0 flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-transform"
-                  >
-                    <img
-                      src={resolvedImg}
-                      alt={current.tradeName || current.name}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3
-                        onClick={handleOpenDetails}
-                        className="text-base sm:text-lg font-bold text-white tracking-tight cursor-pointer hover:text-emerald-300 transition-colors truncate"
-                      >
-                        {current.tradeName || current.name}
-                      </h3>
-                      {current.schedule && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                          Schedule {current.schedule}
-                        </span>
-                      )}
-                    </div>
-
-                    {current.genericName && (
-                      <p className="text-xs text-emerald-200/80 font-medium truncate mt-0.5">
-                        {current.genericName}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-2 text-xs text-slate-300 flex-wrap mt-1">
-                      <span className="inline-flex items-center gap-1 text-slate-300">
-                        <Package className="w-3 h-3 text-emerald-400" />
-                        {current.packing || "Standard Pack"}
-                      </span>
-                      <span className="text-slate-500">·</span>
-                      <span className="text-slate-300 font-medium">
-                        {current.brand || current.company || "Aadya Pharma"}
-                      </span>
-                      {current.description && (
-                        <>
-                          <span className="text-slate-500 hidden sm:inline">·</span>
-                          <span className="text-slate-300/80 hidden sm:inline truncate max-w-xs">
-                            {current.description}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Pricing (MRP Only as per Modification 1) & Actions */}
-                <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-white/10 flex-shrink-0">
-                  <div className="text-left md:text-right pr-2">
-                    <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
-                      MRP
-                    </div>
-                    <div className="text-xl sm:text-2xl font-black text-white">
-                      ₹{current.mrp}
-                    </div>
-                    <div className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
-                      <ShieldCheck className="w-3 h-3" /> Ready in Stock
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Button
-                      size="sm"
-                      onClick={handleAddToCart}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs h-9 px-3.5 shadow-md transition-bounce"
-                    >
-                      {addedSuccess ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 mr-1" /> Added
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="w-3.5 h-3.5 mr-1" /> Add to Cart
-                        </>
-                      )}
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
+              {/* Main Product Showcase Card (Slideshow Item) */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current._id || currentIndex}
+                  initial={{ opacity: 0, x: direction * 25 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -direction * 25 }}
+                  transition={{ duration: 0.28, ease: "easeOut" }}
+                  className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white/5 backdrop-blur-md rounded-xl p-3 sm:p-4 border border-white/10 hover:border-emerald-500/30 transition-colors"
+                >
+                  {/* Left: Thumbnail & Details */}
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                    <div
                       onClick={handleOpenDetails}
-                      className="border-white/20 bg-white/10 hover:bg-white/20 text-white font-medium text-xs h-9 px-3"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-white/95 p-1.5 flex-shrink-0 flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-transform relative group"
                     >
-                      <Eye className="w-3.5 h-3.5 mr-1" /> Details
-                    </Button>
+                      <img
+                        src={resolvedImg}
+                        alt={current.tradeName || current.name}
+                        className="w-full h-full object-contain"
+                      />
+                      <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase shadow">
+                        NEW
+                      </span>
+                    </div>
 
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="whatsapp"
-                      className="text-xs h-9 px-3"
-                    >
-                      <a
-                        href={whatsappLink(
-                          `Hi Aadya Medicine Agencies, I noticed the new product "${current.tradeName || current.name}" added to category ${current.category}. Please share trade enquiry details.`
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3
+                          onClick={handleOpenDetails}
+                          className="text-base sm:text-lg font-bold text-white tracking-tight cursor-pointer hover:text-emerald-300 transition-colors truncate"
+                        >
+                          {current.tradeName || current.name}
+                        </h3>
+                        {current.schedule && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                            Schedule {current.schedule}
+                          </span>
                         )}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5 mr-1" /> Inquire
-                      </a>
-                    </Button>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          {current.category || "General"}
+                        </span>
+                      </div>
+
+                      {current.genericName && (
+                        <p className="text-xs text-emerald-200/80 font-medium truncate mt-0.5">
+                          {current.genericName}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-2 text-xs text-slate-300 flex-wrap mt-1">
+                        <span className="inline-flex items-center gap-1 text-slate-300">
+                          <Package className="w-3 h-3 text-emerald-400" />
+                          {current.packing || "Standard Pack"}
+                        </span>
+                        <span className="text-slate-500">·</span>
+                        <span className="text-slate-300 font-medium">
+                          {current.brand || current.company || "Aadya Pharma"}
+                        </span>
+                        {current.description && (
+                          <>
+                            <span className="text-slate-500 hidden sm:inline">·</span>
+                            <span className="text-slate-300/80 hidden sm:inline truncate max-w-xs">
+                              {current.description}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Right: Pricing & Actions */}
+                  <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-white/10 flex-shrink-0">
+                    <div className="text-left md:text-right pr-2">
+                      <div className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">
+                        MRP
+                      </div>
+                      <div className="text-xl sm:text-2xl font-black text-white">
+                        ₹{current.mrp}
+                      </div>
+                      <div className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
+                        <ShieldCheck className="w-3 h-3" /> Ready in Stock
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        size="sm"
+                        onClick={handleAddToCart}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs h-9 px-3.5 shadow-md transition-bounce"
+                      >
+                        {addedSuccess ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 mr-1" /> Added
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingCart className="w-3.5 h-3.5 mr-1" /> Add to Cart
+                          </>
+                        )}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleOpenDetails}
+                        className="border-white/20 bg-white/10 hover:bg-white/20 text-white font-medium text-xs h-9 px-3"
+                      >
+                        <Eye className="w-3.5 h-3.5 mr-1" /> Details
+                      </Button>
+
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="whatsapp"
+                        className="text-xs h-9 px-3"
+                      >
+                        <a
+                          href={whatsappLink(
+                            `Hi Aadya Medicine Agencies, I noticed the new product "${current.tradeName || current.name}" added to category ${current.category}. Please share trade enquiry details.`
+                          )}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 mr-1" /> Inquire
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Dot Indicators for Slideshow */}
+              {isMultiple && (
+                <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                  {activeAnnouncements.map((p, idx) => (
+                    <button
+                      key={p._id || idx}
+                      onClick={() => goToSlide(idx)}
+                      title={`Go to product ${idx + 1}: ${p.tradeName || p.name}`}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === currentIndex
+                          ? "w-6 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
+                          : "w-2 bg-white/30 hover:bg-white/60"
+                      }`}
+                      aria-label={`Slide ${idx + 1}`}
+                    />
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
           </motion.div>
         ) : (
@@ -348,7 +488,8 @@ export function NewProductBanner() {
               </span>
               <Bell className="w-4 h-4 text-emerald-400 group-hover:rotate-12 transition-transform" />
               <span className="text-xs font-semibold text-slate-200">
-                New Product Added: <span className="text-emerald-400">{current.tradeName || current.name}</span>
+                {bannerTitle}: <span className="text-emerald-400">{current.tradeName || current.name}</span>
+                {isMultiple && ` (+${activeAnnouncements.length - 1} more)`}
               </span>
             </button>
           </motion.div>

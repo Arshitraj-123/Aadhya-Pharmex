@@ -56,7 +56,7 @@ function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => vo
 
 function DefaultNotFoundComponent() {
   if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) {
-    const adminBase = import.meta.env.VITE_ADMIN_URL || "http://localhost:5173/admin/";
+    const adminBase = import.meta.env.VITE_ADMIN_URL || "/admin/";
     const token = localStorage.getItem("auth_token");
     const user = localStorage.getItem("auth_user");
     let target = adminBase;

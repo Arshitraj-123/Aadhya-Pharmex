@@ -6,44 +6,42 @@ import { ProductCard } from "./ProductCard";
 import { featuredProducts as staticFeaturedProducts } from "@/data/products";
 import { useEffect, useState } from "react";
 import api from "@/lib/axios";
-import { useAuth } from "@/contexts/AuthContext";
 import { resolveProductImage } from "@/data/productImages";
 import tablet from "@/assets/product-tablet.jpg";
 
 export function FeaturedProducts() {
-  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    // Only call the protected products API if the user is logged in
-    if (!isAuthenticated) return;
-
     const fetchProducts = async () => {
       try {
         const res = await api.get("/products");
-        const mapped = res.data.products.map((p: any) => ({
-          id: p._id,
-          name: p.tradeName,
-          brand: p.companyId?.name || "Generic",
-          category: p.category || "counter-products",
-          image: resolveProductImage(p.tradeName, tablet).image,
-          mrp: p.mrp || 10,
-          price: p.ptr || 8,
-          packing: p.sku || "10 Tabs",
-          composition: p.genericName || "Standard",
-          description: p.genericName || "No description available"
-        }));
-        if (mapped.length > 0) {
-          setProducts(mapped.slice(0, 4));
+        if (res.data?.products && Array.isArray(res.data.products)) {
+          const mapped = res.data.products.map((p: any) => ({
+            id: p._id,
+            name: p.tradeName,
+            brand: p.companyId?.name || "Generic",
+            category: p.category || "counter-products",
+            image: resolveProductImage(p.tradeName, tablet).image,
+            mrp: p.mrp || 10,
+            price: p.ptr || 8,
+            packing: p.sku || "10 Tabs",
+            composition: p.genericName || "Standard",
+            description: p.genericName || "No description available",
+            isNewLaunch: Boolean(p.isNewLaunch)
+          }));
+          if (mapped.length > 0) {
+            setProducts(mapped.slice(0, 8));
+          }
         }
       } catch (err) {
         console.error("Error fetching live featured products:", err);
       }
     };
     fetchProducts();
-  }, [isAuthenticated]);
+  }, []);
 
-  const itemsToDisplay = products.length > 0 ? products : staticFeaturedProducts.slice(0, 4);
+  const itemsToDisplay = products.length > 0 ? products : staticFeaturedProducts.slice(0, 8);
 
   return (
     <section className="py-24 bg-gradient-soft">

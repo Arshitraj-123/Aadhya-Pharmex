@@ -23,6 +23,7 @@ export type Product = {
   composition: string;
   description: string;
   isNewLaunch?: boolean;
+  gstRate?: number;
 };
 
 export const categories = [
